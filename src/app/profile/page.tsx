@@ -3,11 +3,10 @@
 import { useAuth } from "@/components/AuthProvider";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
 import { allQuizzes } from "@/data/quizzes";
 
 export default function ProfilePage() {
-  const { user, profile, loading } = useAuth();
+  const { user, loading } = useAuth();
   const router = useRouter();
   const [completedCount, setCompletedCount] = useState(0);
 
@@ -18,16 +17,14 @@ export default function ProfilePage() {
   useEffect(() => {
     if (!user) return;
     const fetchStats = async () => {
-      const { count } = await supabase
-        .from("quiz_completions")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", user.id);
-      setCompletedCount(count ?? 0);
+      const res = await fetch("/api/quiz/completions");
+      const data = await res.json();
+      setCompletedCount(data.completions?.length ?? 0);
     };
     fetchStats();
   }, [user]);
 
-  if (loading || !profile) {
+  if (loading || !user) {
     return (
       <div className="min-h-[80vh] flex items-center justify-center">
         <div className="animate-spin h-8 w-8 border-4 border-purple-600 border-t-transparent rounded-full" />
@@ -35,8 +32,8 @@ export default function ProfilePage() {
     );
   }
 
-  const progressToGoal = Math.min((profile.coins / 400) * 100, 100);
-  const coinsNeeded = Math.max(400 - profile.coins, 0);
+  const progressToGoal = Math.min((user.coins / 400) * 100, 100);
+  const coinsNeeded = Math.max(400 - user.coins, 0);
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8 fade-in">
@@ -45,8 +42,8 @@ export default function ProfilePage() {
           <div className="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <span className="text-4xl">👤</span>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">{profile.username}</h1>
-          <p className="text-gray-500">{profile.email}</p>
+          <h1 className="text-2xl font-bold text-gray-900">{user.username}</h1>
+          <p className="text-gray-500">{user.email}</p>
         </div>
 
         {/* Coin balance */}
@@ -54,7 +51,7 @@ export default function ProfilePage() {
           <div className="flex items-center justify-between mb-2">
             <span className="text-gray-600 font-medium">Your Coins</span>
             <span className="text-3xl font-bold text-yellow-600 flex items-center gap-2">
-              <span className="coin-bounce">🪙</span> {profile.coins}
+              <span className="coin-bounce">🪙</span> {user.coins}
             </span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-4 mt-3">
@@ -64,7 +61,7 @@ export default function ProfilePage() {
             />
           </div>
           <div className="flex justify-between text-sm mt-2">
-            <span className="text-gray-500">{profile.coins} / 400 coins</span>
+            <span className="text-gray-500">{user.coins} / 400 coins</span>
             {coinsNeeded > 0 ? (
               <span className="text-gray-500">{coinsNeeded} more to cash out</span>
             ) : (
@@ -85,7 +82,7 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {profile.coins >= 400 && (
+        {user.coins >= 400 && (
           <button
             onClick={() => router.push("/cashout")}
             className="w-full bg-green-500 text-white font-bold py-4 rounded-xl hover:bg-green-600 transition-colors text-lg pulse-glow"

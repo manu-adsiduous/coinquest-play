@@ -4,7 +4,6 @@ import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { allQuizzes } from "@/data/quizzes";
-import { supabase } from "@/lib/supabase";
 import { trackEvent } from "@/lib/analytics";
 import RewardedAd from "@/components/RewardedAd";
 
@@ -13,7 +12,7 @@ type QuizState = "locked" | "playing" | "finished" | "results";
 export default function QuizPage() {
   const params = useParams();
   const router = useRouter();
-  const { user, profile, refreshProfile } = useAuth();
+  const { user, refreshProfile } = useAuth();
 
   const quiz = allQuizzes.find((q) => q.id === params.id);
 
@@ -28,13 +27,9 @@ export default function QuizPage() {
   useEffect(() => {
     if (!user || !quiz) return;
     const checkCompletion = async () => {
-      const { data } = await supabase
-        .from("quiz_completions")
-        .select("id")
-        .eq("user_id", user.id)
-        .eq("quiz_id", quiz.id)
-        .limit(1);
-      if (data && data.length > 0) {
+      const res = await fetch("/api/quiz/completions");
+      const data = await res.json();
+      if (data.completions?.includes(quiz.id)) {
         setAlreadyCompleted(true);
       }
     };
@@ -79,23 +74,20 @@ export default function QuizPage() {
 
     if (!user || !quiz || alreadyCompleted) return;
 
-    // Award coins
-    const coinsToAdd = 4;
-    await supabase
-      .from("profiles")
-      .update({ coins: (profile?.coins ?? 0) + coinsToAdd })
-      .eq("id", user.id);
-
-    await supabase.from("quiz_completions").insert({
-      user_id: user.id,
-      quiz_id: quiz.id,
-      score,
+    // Award coins via API
+    const res = await fetch("/api/quiz/complete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ quizId: quiz.id, score }),
     });
+    const data = await res.json();
 
-    setCoinsAwarded(true);
+    if (data.coins > 0) {
+      setCoinsAwarded(true);
+      trackEvent("coins_earned", { amount: data.coins, quiz_id: quiz.id });
+    }
     await refreshProfile();
-    trackEvent("coins_earned", { amount: coinsToAdd, quiz_id: quiz.id });
-  }, [quiz, score, user, profile, alreadyCompleted, refreshProfile]);
+  }, [quiz, score, user, alreadyCompleted, refreshProfile]);
 
   if (!quiz) {
     return (
@@ -298,7 +290,7 @@ export default function QuizPage() {
           >
             More Quizzes
           </button>
-          {(profile?.coins ?? 0) >= 400 && (
+          {(user?.coins ?? 0) >= 400 && (
             <button
               onClick={() => router.push("/cashout")}
               className="flex-1 bg-green-500 text-white font-bold py-3 rounded-xl hover:bg-green-600"

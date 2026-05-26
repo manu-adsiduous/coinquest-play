@@ -3,11 +3,10 @@
 import { useAuth } from "@/components/AuthProvider";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
 import { trackEvent } from "@/lib/analytics";
 
 export default function CashoutPage() {
-  const { user, profile, loading, refreshProfile } = useAuth();
+  const { user, loading, refreshProfile } = useAuth();
   const router = useRouter();
   const [redeeming, setRedeeming] = useState(false);
   const [giftCardCode, setGiftCardCode] = useState<string | null>(null);
@@ -18,49 +17,22 @@ export default function CashoutPage() {
   }, [user, loading, router]);
 
   const handleCashout = async () => {
-    if (!user || !profile || profile.coins < 400) return;
+    if (!user || user.coins < 400) return;
     setRedeeming(true);
     setError("");
 
     try {
-      // Find an unredeemed gift card
-      const { data: card, error: fetchError } = await supabase
-        .from("gift_cards")
-        .select("*")
-        .is("redeemed_by", null)
-        .limit(1)
-        .single();
+      const res = await fetch("/api/gift-cards", { method: "POST" });
+      const data = await res.json();
 
-      if (fetchError || !card) {
-        setError("No gift cards available right now. Please try again later!");
+      if (!res.ok) {
+        setError(data.error || "Something went wrong");
         setRedeeming(false);
         return;
       }
-
-      // Mark the gift card as redeemed
-      const { error: updateError } = await supabase
-        .from("gift_cards")
-        .update({
-          redeemed_by: user.id,
-          redeemed_at: new Date().toISOString(),
-        })
-        .eq("id", card.id)
-        .is("redeemed_by", null);
-
-      if (updateError) {
-        setError("Something went wrong. Please try again.");
-        setRedeeming(false);
-        return;
-      }
-
-      // Deduct coins
-      await supabase
-        .from("profiles")
-        .update({ coins: profile.coins - 400 })
-        .eq("id", user.id);
 
       await refreshProfile();
-      setGiftCardCode(card.code);
+      setGiftCardCode(data.code);
       trackEvent("cashout", { coins_spent: 400 });
     } catch {
       setError("Something went wrong. Please try again.");
@@ -68,7 +40,7 @@ export default function CashoutPage() {
     setRedeeming(false);
   };
 
-  if (loading || !profile) {
+  if (loading || !user) {
     return (
       <div className="min-h-[80vh] flex items-center justify-center">
         <div className="animate-spin h-8 w-8 border-4 border-purple-600 border-t-transparent rounded-full" />
@@ -104,11 +76,11 @@ export default function CashoutPage() {
           <>
             <div className="bg-gradient-to-r from-yellow-50 to-amber-50 rounded-xl p-6 mb-6">
               <div className="text-4xl mb-2 coin-bounce">🪙</div>
-              <div className="text-3xl font-bold text-yellow-600">{profile.coins} coins</div>
+              <div className="text-3xl font-bold text-yellow-600">{user.coins} coins</div>
               <div className="text-sm text-gray-500 mt-1">400 coins needed</div>
             </div>
 
-            {profile.coins >= 400 ? (
+            {user.coins >= 400 ? (
               <>
                 <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4 mb-6">
                   <p className="text-green-700 font-medium">
@@ -133,11 +105,11 @@ export default function CashoutPage() {
                 <div className="w-full bg-gray-200 rounded-full h-4 mb-3">
                   <div
                     className="bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-full h-4 transition-all"
-                    style={{ width: `${(profile.coins / 400) * 100}%` }}
+                    style={{ width: `${(user.coins / 400) * 100}%` }}
                   />
                 </div>
                 <p className="text-gray-500 mb-6">
-                  You need <span className="font-bold text-purple-600">{400 - profile.coins} more coins</span> to cash out.
+                  You need <span className="font-bold text-purple-600">{400 - user.coins} more coins</span> to cash out.
                   Keep playing quizzes!
                 </p>
                 <button

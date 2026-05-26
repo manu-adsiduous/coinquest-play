@@ -5,7 +5,7 @@ import { useAuth } from "./AuthProvider";
 import { useState } from "react";
 
 export default function Navbar() {
-  const { user, profile, signOut, loading } = useAuth();
+  const { user, signOut, loading } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -34,7 +34,7 @@ export default function Navbar() {
                     </Link>
                     <div className="flex items-center gap-2 bg-white/20 rounded-full px-4 py-1.5">
                       <span className="text-yellow-300 text-lg">🪙</span>
-                      <span className="font-bold">{profile?.coins ?? 0}</span>
+                      <span className="font-bold">{user?.coins ?? 0}</span>
                     </div>
                     <button
                       onClick={signOut}
@@ -88,7 +88,7 @@ export default function Navbar() {
               <>
                 <div className="flex items-center gap-2">
                   <span className="text-yellow-300">🪙</span>
-                  <span className="font-bold">{profile?.coins ?? 0} coins</span>
+                  <span className="font-bold">{user?.coins ?? 0} coins</span>
                 </div>
                 <Link href="/profile" className="hover:text-yellow-300" onClick={() => setMenuOpen(false)}>
                   Profile

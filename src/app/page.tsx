@@ -4,7 +4,6 @@ import { useState, useMemo, useEffect } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import QuizCard from "@/components/QuizCard";
 import { allQuizzes } from "@/data/quizzes";
-import { supabase } from "@/lib/supabase";
 
 const categories = [
   "All",
@@ -34,12 +33,10 @@ export default function Home() {
       return;
     }
     const fetchCompletions = async () => {
-      const { data } = await supabase
-        .from("quiz_completions")
-        .select("quiz_id")
-        .eq("user_id", user.id);
-      if (data) {
-        setCompletedQuizIds(new Set(data.map((d) => d.quiz_id)));
+      const res = await fetch("/api/quiz/completions");
+      const data = await res.json();
+      if (data.completions) {
+        setCompletedQuizIds(new Set(data.completions));
       }
     };
     fetchCompletions();
