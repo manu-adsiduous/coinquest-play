@@ -61,11 +61,10 @@ export default function Home() {
         <h1 className="text-4xl md:text-5xl font-extrabold mb-4">
           <span className="text-purple-600">Play Quizzes.</span>{" "}
           <span className="text-yellow-500">Earn Coins.</span>{" "}
-          <span className="text-green-500">Get Robux!</span>
+          <span className="text-green-500">Get FREE Robux!</span>
         </h1>
         <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-          Complete quizzes to earn coins — cash out for Robux gift cards at 400 coins!
-          Each quiz earns you <span className="font-bold text-yellow-600">4 coins</span>.
+          Complete quizzes to earn coins. Cash out for real Robux gift cards.
         </p>
         {!user && (
           <div className="mt-6 flex justify-center gap-4">
@@ -83,22 +82,6 @@ export default function Home() {
             </a>
           </div>
         )}
-      </div>
-
-      {/* Stats bar */}
-      <div className="flex flex-wrap justify-center gap-6 mb-8">
-        <div className="bg-white rounded-xl shadow px-6 py-3 text-center">
-          <div className="text-2xl font-bold text-purple-600">{allQuizzes.length}</div>
-          <div className="text-sm text-gray-500">Quizzes</div>
-        </div>
-        <div className="bg-white rounded-xl shadow px-6 py-3 text-center">
-          <div className="text-2xl font-bold text-yellow-500">🪙 4</div>
-          <div className="text-sm text-gray-500">Coins per Quiz</div>
-        </div>
-        <div className="bg-white rounded-xl shadow px-6 py-3 text-center">
-          <div className="text-2xl font-bold text-green-500">400</div>
-          <div className="text-sm text-gray-500">Coins = Robux</div>
-        </div>
       </div>
 
       {/* Search */}
