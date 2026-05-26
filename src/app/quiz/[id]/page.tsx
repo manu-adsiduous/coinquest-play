@@ -124,32 +124,12 @@ export default function QuizPage() {
             </div>
           )}
 
-          {!user ? (
-            <div className="space-y-3">
-              <p className="text-gray-500">Sign in to play and earn coins!</p>
-              <div className="flex justify-center gap-3">
-                <button
-                  onClick={() => router.push("/login")}
-                  className="bg-purple-600 text-white font-bold py-3 px-6 rounded-xl hover:bg-purple-700"
-                >
-                  Log In
-                </button>
-                <button
-                  onClick={() => router.push("/signup")}
-                  className="bg-white text-purple-600 font-bold py-3 px-6 rounded-xl border-2 border-purple-600 hover:bg-purple-50"
-                >
-                  Sign Up
-                </button>
-              </div>
-            </div>
-          ) : (
-            <RewardedAd
-              adName="quiz-unlock"
-              buttonText="Watch Ad to Start Quiz"
-              onReward={handleUnlockReward}
-              className="bg-purple-600 text-white hover:bg-purple-700 w-full text-lg"
-            />
-          )}
+          <RewardedAd
+            adName="quiz-unlock"
+            buttonText="Watch Ad to Start Quiz"
+            onReward={handleUnlockReward}
+            className="bg-purple-600 text-white hover:bg-purple-700 w-full text-lg"
+          />
         </div>
       </div>
     );
@@ -258,6 +238,29 @@ export default function QuizPage() {
           <div className="bg-yellow-50 border-2 border-yellow-300 rounded-xl p-4 mb-6 fade-in">
             <span className="text-2xl coin-bounce inline-block">🪙</span>
             <p className="text-yellow-700 font-bold text-lg">+4 coins earned!</p>
+          </div>
+        )}
+
+        {!user && (
+          <div className="bg-purple-50 border-2 border-purple-300 rounded-xl p-5 mb-6 fade-in">
+            <p className="text-purple-800 font-bold text-lg mb-1">🪙 You earned 4 coins!</p>
+            <p className="text-purple-600 text-sm mb-3">
+              Sign up now to save your coins and cash out for Robux gift cards at 400 coins!
+            </p>
+            <div className="flex justify-center gap-3">
+              <button
+                onClick={() => router.push("/signup")}
+                className="bg-purple-600 text-white font-bold py-2.5 px-6 rounded-xl hover:bg-purple-700 transition-colors"
+              >
+                Sign Up & Save Coins
+              </button>
+              <button
+                onClick={() => router.push("/login")}
+                className="bg-white text-purple-600 font-bold py-2.5 px-6 rounded-xl border-2 border-purple-300 hover:bg-purple-50 transition-colors"
+              >
+                Log In
+              </button>
+            </div>
           </div>
         )}
 
