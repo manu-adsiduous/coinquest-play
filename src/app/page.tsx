@@ -46,7 +46,12 @@ export default function Home() {
       }
     };
     fetchCompletions();
-  }, [user]);
+
+    // Refetch when user returns to this tab (e.g. after completing a quiz)
+    const handleFocus = () => fetchCompletions();
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
+  }, [user, user?.coins]);
 
   const completionMap = useMemo(() => {
     const map = new Map<string, number>();
