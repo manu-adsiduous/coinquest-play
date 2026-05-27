@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import { getDb } from "@/lib/db";
+import { trackServerEvent } from "@/lib/track";
 
 export async function POST() {
   try {
@@ -47,6 +48,8 @@ export async function POST() {
       UPDATE users SET coins = coins - 400
       WHERE id = ${session.userId}
     `;
+
+    trackServerEvent("cashout", Number(session.userId), { amount: 400 });
 
     return NextResponse.json({ code: card.code });
   } catch (error) {

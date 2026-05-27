@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { scoreToCoins, MAX_COINS_PER_QUIZ } from "@/lib/coins";
+import { trackServerEvent } from "@/lib/track";
 
 export async function POST(req: Request) {
   try {
@@ -73,6 +74,12 @@ export async function POST(req: Request) {
       WHERE id = ${session.userId}
       RETURNING coins
     `;
+
+    trackServerEvent("quiz_completed", Number(session.userId), {
+      quiz_id: quizId,
+      score: score ?? 0,
+      coins_earned: coinsForThisAttempt,
+    });
 
     return NextResponse.json({
       coinsEarned: coinsForThisAttempt,

@@ -23,6 +23,20 @@ interface UserRow {
   redemptions: number;
 }
 
+interface EventRow {
+  id: number;
+  event_name: string;
+  properties: Record<string, unknown>;
+  created_at: string;
+  username: string | null;
+  email: string | null;
+}
+
+interface EventSummary {
+  event_name: string;
+  count: number;
+}
+
 interface GiftCard {
   id: number;
   code: string;
@@ -56,6 +70,9 @@ export default function ConsolePage() {
   const [newCodes, setNewCodes] = useState("");
   const [addingCodes, setAddingCodes] = useState(false);
   const [addResult, setAddResult] = useState<string | null>(null);
+  const [events, setEvents] = useState<EventRow[]>([]);
+  const [eventSummary, setEventSummary] = useState<EventSummary[]>([]);
+  const [eventsTotal, setEventsTotal] = useState(0);
 
   // Check admin access
   useEffect(() => {
@@ -100,6 +117,16 @@ export default function ConsolePage() {
     }
   }, []);
 
+  const fetchEvents = useCallback(async () => {
+    const res = await fetch("/api/console/events?limit=50");
+    if (res.ok) {
+      const data = await res.json();
+      setEvents(data.events);
+      setEventSummary(data.summary);
+      setEventsTotal(data.total);
+    }
+  }, []);
+
   useEffect(() => {
     if (!authorized) return;
     fetchStats();
@@ -109,7 +136,8 @@ export default function ConsolePage() {
     if (!authorized) return;
     fetchUsers();
     fetchGiftCards();
-  }, [authorized, fetchUsers, fetchGiftCards]);
+    fetchEvents();
+  }, [authorized, fetchUsers, fetchGiftCards, fetchEvents]);
 
   const handleAddCodes = async () => {
     const codes = newCodes.split("\n").map(c => c.trim()).filter(Boolean);
@@ -336,6 +364,71 @@ export default function ConsolePage() {
             {giftCards.length === 0 && (
               <p className="text-text-secondary text-xs text-center py-4">No gift cards in inventory</p>
             )}
+          </div>
+        </div>
+      </div>
+
+      {/* Events */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+        {/* Event summary */}
+        <div className="pixel-card p-5">
+          <h2 className="font-pixel text-[10px] text-white mb-4">Event Summary ({eventsTotal} total)</h2>
+          <div className="space-y-2">
+            {eventSummary.map((s) => (
+              <div key={s.event_name} className="flex items-center justify-between bg-[#0d1b2a] rounded-sm p-2 border border-border-pixel">
+                <span className="text-pixel-cyan text-xs font-bold">{s.event_name}</span>
+                <span className="text-coin-gold font-bold text-sm">{s.count}</span>
+              </div>
+            ))}
+            {eventSummary.length === 0 && (
+              <p className="text-text-secondary text-xs text-center py-4">No events yet</p>
+            )}
+          </div>
+        </div>
+
+        {/* Recent events */}
+        <div className="pixel-card p-5 lg:col-span-2">
+          <h2 className="font-pixel text-[10px] text-white mb-4">Recent Events</h2>
+          <div className="overflow-x-auto max-h-96 overflow-y-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b-2 border-border-pixel text-text-secondary text-xs text-left">
+                  <th className="pb-2 pr-3">Event</th>
+                  <th className="pb-2 pr-3">User</th>
+                  <th className="pb-2 pr-3">Details</th>
+                  <th className="pb-2">Time</th>
+                </tr>
+              </thead>
+              <tbody>
+                {events.map((e) => (
+                  <tr key={e.id} className="border-b border-border-pixel/50">
+                    <td className="py-2 pr-3">
+                      <span className="text-pixel-cyan font-bold text-xs">{e.event_name}</span>
+                    </td>
+                    <td className="py-2 pr-3">
+                      {e.username ? (
+                        <span className="text-white text-xs">{e.username}</span>
+                      ) : (
+                        <span className="text-text-secondary text-xs">guest</span>
+                      )}
+                    </td>
+                    <td className="py-2 pr-3">
+                      <span className="text-text-secondary text-[10px]">
+                        {Object.entries(e.properties || {}).map(([k, v]) => `${k}: ${v}`).join(", ") || "—"}
+                      </span>
+                    </td>
+                    <td className="py-2 text-text-secondary text-[10px] whitespace-nowrap">
+                      {new Date(e.created_at).toLocaleString()}
+                    </td>
+                  </tr>
+                ))}
+                {events.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="py-4 text-center text-text-secondary text-xs">No events yet</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>

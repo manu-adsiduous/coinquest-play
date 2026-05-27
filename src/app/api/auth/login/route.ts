@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
+import { headers } from "next/headers";
 import bcrypt from "bcryptjs";
 import { getDb } from "@/lib/db";
 import { signToken, sessionCookieOptions } from "@/lib/auth";
+import { trackServerEvent } from "@/lib/track";
 
 export async function POST(req: Request) {
   try {
@@ -28,6 +30,8 @@ export async function POST(req: Request) {
     }
 
     const token = signToken({ userId: user.id, email: user.email });
+    const h = await headers();
+    trackServerEvent("login", user.id, { method: "email" }, h.get("user-agent") || undefined, h.get("x-forwarded-for")?.split(",")[0]?.trim() || undefined);
 
     const response = NextResponse.json({
       user: { id: user.id, email: user.email, username: user.username, coins: user.coins },
