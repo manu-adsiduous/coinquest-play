@@ -249,7 +249,9 @@ export default function ConsolePage() {
                     </td>
                     <td className="py-2 pr-3">
                       <span className="text-coin-gold font-bold">{u.coins}</span>
-                      <span className="text-text-secondary text-[10px] ml-1">({u.total_coins_earned} earned)</span>
+                      {u.total_coins_earned !== u.coins && (
+                        <span className="text-text-secondary text-[10px] ml-1">({u.total_coins_earned} earned)</span>
+                      )}
                     </td>
                     <td className="py-2 pr-3 text-pixel-cyan">{u.quizzes_completed}</td>
                     <td className="py-2">
