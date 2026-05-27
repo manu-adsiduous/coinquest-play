@@ -71,6 +71,8 @@ export default function QuizPage() {
   };
 
   const handleRetake = () => {
+    // Update previousCoinsEarned to reflect best so far before resetting
+    setPreviousCoinsEarned((prev) => Math.max(prev, coinsEarnedThisAttempt));
     setState("locked");
     setCurrentQuestion(0);
     setSelectedAnswer(null);
