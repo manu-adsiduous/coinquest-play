@@ -126,7 +126,8 @@ export default function QuizPage() {
 
           <RewardedAd
             adName="quiz-unlock"
-            buttonText="Watch Ad to Start Quiz"
+            buttonText="Unlock This Quiz"
+            adLabel="Watch Ad"
             onReward={handleUnlockReward}
             className="bg-purple-600 text-white hover:bg-purple-700 w-full text-lg"
           />
@@ -206,7 +207,8 @@ export default function QuizPage() {
           <p className="text-gray-500 mb-6">Watch a short ad to see your results and claim your coins!</p>
           <RewardedAd
             adName="quiz-results"
-            buttonText="Watch Ad to See Results & Claim Coins"
+            buttonText="See Results & Claim Coins"
+            adLabel="Watch Ad"
             onReward={handleResultsReward}
             className="bg-green-500 text-white hover:bg-green-600 w-full text-lg"
           />

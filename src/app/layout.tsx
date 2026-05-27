@@ -39,7 +39,6 @@ export default function RootLayout({
         {/* Google AdSense H5 Games Ad Placement API */}
         <script
           async
-          data-adbreak-test="on"
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8356035806330431"
           crossOrigin="anonymous"
         />
