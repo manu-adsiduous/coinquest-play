@@ -30,6 +30,9 @@ export default function Navbar() {
             <Link href="/" className="hover:text-pixel-cyan transition-colors font-bold text-sm">
               Quizzes
             </Link>
+            <Link href="/how-it-works" className="hover:text-pixel-cyan transition-colors font-bold text-sm">
+              How It Works
+            </Link>
             {!loading && (
               <>
                 {user ? (
@@ -166,6 +169,9 @@ export default function Navbar() {
           <div className="md:hidden pb-4 flex flex-col gap-3 border-t-2 border-border-pixel pt-3">
             <Link href="/" className="hover:text-pixel-cyan font-bold text-sm" onClick={() => setMenuOpen(false)}>
               Quizzes
+            </Link>
+            <Link href="/how-it-works" className="hover:text-pixel-cyan font-bold text-sm" onClick={() => setMenuOpen(false)}>
+              How It Works
             </Link>
             {!loading && user ? (
               <>
