@@ -55,7 +55,12 @@ if (typeof window !== "undefined") {
 
 function beep(frequency: number, duration: number, wave: OscillatorType = "square", volume = 0.15) {
   const ctx = getOrCreateCtx();
-  if (!ctx || ctx.state === "suspended") return;
+  if (!ctx) return;
+
+  // Always try to resume — state may still be transitioning
+  if (ctx.state === "suspended") {
+    ctx.resume().catch(() => {});
+  }
 
   try {
     const osc = ctx.createOscillator();
