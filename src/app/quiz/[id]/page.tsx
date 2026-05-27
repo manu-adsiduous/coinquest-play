@@ -286,21 +286,52 @@ export default function QuizPage() {
         </p>
         <p className="text-text-secondary mb-4">correct answers</p>
 
-        {/* Coins earned this attempt */}
-        {coinsAwarded > 0 && (
+        {/* Guest: single merged box with coins + signup nudge */}
+        {!user && coinsEarnedThisAttempt > 0 && (
+          <div className="bg-pixel-blue/10 border-2 border-pixel-blue rounded-sm p-5 mb-4 slide-up">
+            <div className="flex items-center justify-center gap-2 mb-1">
+              <span className="pixel-coin coin-bounce">C</span>
+              <span className="text-coin-gold font-bold text-lg">+{coinsEarnedThisAttempt} coin{coinsEarnedThisAttempt !== 1 ? "s" : ""} earned!</span>
+            </div>
+            <p className="text-text-secondary text-xs mb-3">
+              {coinsEarnedThisAttempt}/{MAX_COINS_PER_QUIZ} coins for this quiz
+              {coinsStillAvailable > 0 && ` — get 8+ correct to earn more!`}
+            </p>
+            <p className="text-pixel-blue text-sm mb-3">
+              Sign up now to save your coins and cash out for Robux gift cards at 400 coins!
+            </p>
+            <div className="flex justify-center gap-3">
+              <button
+                onClick={() => router.push("/signup")}
+                className="bg-roblox-green text-white font-bold py-2.5 px-6 rounded-sm pixel-btn"
+              >
+                Sign Up & Save Coins
+              </button>
+              <button
+                onClick={() => router.push("/login")}
+                className="bg-transparent text-pixel-cyan font-bold py-2.5 px-6 rounded-sm border-2 border-pixel-cyan pixel-btn"
+              >
+                Log In
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Logged-in: coins earned box */}
+        {user && coinsAwarded > 0 && (
           <div className="bg-coin-gold/10 border-2 border-coin-gold rounded-sm p-4 mb-4 slide-up">
             <div className="flex items-center justify-center gap-2 mb-1">
               <span className="pixel-coin coin-bounce">C</span>
               <span className="text-coin-gold font-bold text-lg">+{coinsAwarded} coin{coinsAwarded !== 1 ? "s" : ""} earned!</span>
             </div>
             <p className="text-text-secondary text-xs">
-              {coinsEarnedThisAttempt}/{MAX_COINS_PER_QUIZ} coins for this quiz
+              {totalCoinsNow}/{MAX_COINS_PER_QUIZ} coins for this quiz
               {coinsStillAvailable > 0 && ` — get 8+ correct to earn more!`}
             </p>
           </div>
         )}
 
-        {coinsAwarded === 0 && coinsEarnedThisAttempt > 0 && user && (
+        {user && coinsAwarded === 0 && coinsEarnedThisAttempt > 0 && (
           <div className="bg-card rounded-sm p-4 mb-4 text-text-secondary text-sm border-2 border-border-pixel">
             You earned {coinsEarnedThisAttempt} coin{coinsEarnedThisAttempt !== 1 ? "s" : ""} this attempt, but you already had {previousCoinsEarned} from a previous try. No additional coins this time.
           </div>
@@ -312,21 +343,18 @@ export default function QuizPage() {
           </div>
         )}
 
-        {/* Guest signup prompt */}
-        {!user && (
+        {/* Guest: no coins earned */}
+        {!user && coinsEarnedThisAttempt === 0 && (
           <div className="bg-pixel-blue/10 border-2 border-pixel-blue rounded-sm p-5 mb-4 fade-in">
-            <p className="text-coin-gold font-bold text-lg mb-1">
-              <span className="pixel-coin inline-block mr-1">C</span> You earned {coinsEarnedThisAttempt} coin{coinsEarnedThisAttempt !== 1 ? "s" : ""}!
-            </p>
             <p className="text-pixel-blue text-sm mb-3">
-              Sign up now to save your coins and cash out for Robux gift cards at 400 coins!
+              Sign up to save your progress and cash out for Robux gift cards!
             </p>
             <div className="flex justify-center gap-3">
               <button
                 onClick={() => router.push("/signup")}
                 className="bg-roblox-green text-white font-bold py-2.5 px-6 rounded-sm pixel-btn"
               >
-                Sign Up & Save Coins
+                Sign Up
               </button>
               <button
                 onClick={() => router.push("/login")}
