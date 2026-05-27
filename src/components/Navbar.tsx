@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "./AuthProvider";
 import { useState } from "react";
 
 export default function Navbar() {
   const { user, signOut, loading, sessionCoins } = useAuth();
+  const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [showCoinPopup, setShowCoinPopup] = useState(false);
 
@@ -61,8 +63,8 @@ export default function Navbar() {
                 {/* Coin counter - always visible */}
                 <div className="relative">
                   <button
-                    onClick={user ? undefined : handleCoinClick}
-                    className={`flex items-center gap-2 bg-card border-2 border-coin-gold px-3 py-1 rounded-sm transition-colors ${!user ? "cursor-pointer hover:border-coin-gold/80 hover:bg-card-hover" : ""}`}
+                    onClick={user ? () => router.push("/cashout") : handleCoinClick}
+                    className="flex items-center gap-2 bg-card border-2 border-coin-gold px-3 py-1 rounded-sm transition-colors cursor-pointer hover:border-coin-gold/80 hover:bg-card-hover"
                   >
                     <span className="pixel-coin">C</span>
                     <span className="font-bold text-coin-gold text-sm">{displayCoins}</span>
@@ -114,8 +116,8 @@ export default function Navbar() {
             {!loading && (
               <div className="relative">
                 <button
-                  onClick={user ? undefined : handleCoinClick}
-                  className="flex items-center gap-1.5 bg-card border-2 border-coin-gold px-2 py-1 rounded-sm"
+                  onClick={user ? () => router.push("/cashout") : handleCoinClick}
+                  className="flex items-center gap-1.5 bg-card border-2 border-coin-gold px-2 py-1 rounded-sm hover:bg-card-hover"
                 >
                   <span className="pixel-coin" style={{ width: 16, height: 16, fontSize: 6 }}>C</span>
                   <span className="font-bold text-coin-gold text-xs">{displayCoins}</span>
