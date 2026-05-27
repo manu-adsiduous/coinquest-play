@@ -8,7 +8,7 @@ const steps = [
     number: 1,
     emoji: "🎮",
     title: "Pick a Quiz",
-    description: "Browse 110+ quizzes across categories like Roblox, Minecraft, Anime, and more. Each quiz has 10 questions.",
+    description: "Browse quizzes across categories like Roblox, Minecraft, Anime, and more. Each quiz has 10 questions.",
   },
   {
     number: 2,
@@ -37,7 +37,7 @@ const steps = [
   {
     number: 6,
     emoji: "💰",
-    title: "Cash Out at 400 Coins",
+    title: "Cash Out",
     description: "Once you reach 400 coins, head to the Cash Out page to get a Robux gift card code instantly!",
   },
 ];
