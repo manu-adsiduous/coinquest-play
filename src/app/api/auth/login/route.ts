@@ -4,9 +4,22 @@ import bcrypt from "bcryptjs";
 import { getDb } from "@/lib/db";
 import { signToken, sessionCookieOptions } from "@/lib/auth";
 import { trackServerEvent } from "@/lib/track";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
   try {
+    const h = await headers();
+    const ip = getClientIp(h);
+
+    // Rate limit: 5 attempts per minute per IP
+    const rl = rateLimit("login", ip, 5, 60000);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: `Too many attempts. Try again in ${rl.retryAfterSecs}s.` },
+        { status: 429 }
+      );
+    }
+
     const { email, password } = await req.json();
 
     if (!email || !password) {
@@ -30,8 +43,7 @@ export async function POST(req: Request) {
     }
 
     const token = signToken({ userId: user.id, email: user.email });
-    const h = await headers();
-    trackServerEvent("login", user.id, { method: "email" }, h.get("user-agent") || undefined, h.get("x-forwarded-for")?.split(",")[0]?.trim() || undefined, undefined, { email: user.email });
+    trackServerEvent("login", user.id, { method: "email" }, h.get("user-agent") || undefined, ip, undefined, { email: user.email });
 
     const response = NextResponse.json({
       user: { id: user.id, email: user.email, username: user.username, coins: user.coins },

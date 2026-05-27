@@ -2,6 +2,10 @@ import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 
 const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-me";
+
+if (process.env.NODE_ENV === "production" && JWT_SECRET === "dev-secret-change-me") {
+  throw new Error("JWT_SECRET must be set in production");
+}
 const COOKIE_NAME = "cq_session";
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "manu@adsiduous.com").split(",").map(e => e.trim());
 
