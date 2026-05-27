@@ -404,7 +404,7 @@ export default function QuizPage() {
                 <span className="text-base">Retake Quiz</span>
                 <span className="flex items-center gap-1 text-[10px] opacity-75 font-normal">
                   <span className="pixel-coin" style={{ width: 12, height: 12, fontSize: 5, borderColor: "#0d1b2a" }}>C</span>
-                  earn up to {coinsStillAvailable} more coin{coinsStillAvailable !== 1 ? "s" : ""}
+                  Earn Up to {coinsStillAvailable} More Coin{coinsStillAvailable !== 1 ? "s" : ""}
                 </span>
               </span>
             </button>
