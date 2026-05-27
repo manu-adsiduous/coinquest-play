@@ -53,11 +53,12 @@ export default function RewardedAd({
   disabled = false,
 }: RewardedAdProps) {
   const [loading, setLoading] = useState(false);
+  const [noAd, setNoAd] = useState(false);
 
   const showInterstitialFallback = useCallback(() => {
     if (typeof window === "undefined" || !window.adBreak) {
       setLoading(false);
-      onReward();
+      setNoAd(true);
       return;
     }
 
@@ -68,10 +69,12 @@ export default function RewardedAd({
       afterAd: () => {},
       adBreakDone: (placementInfo) => {
         setLoading(false);
-        if (placementInfo.breakStatus === "viewed" || placementInfo.breakStatus === "notReady" || placementInfo.breakStatus === "frequencyCapped") {
+        if (placementInfo.breakStatus === "viewed") {
+          setNoAd(false);
           onReward();
         } else {
-          onReward();
+          // No interstitial available either
+          setNoAd(true);
         }
       },
     });
@@ -80,6 +83,7 @@ export default function RewardedAd({
   const showAd = useCallback(() => {
     if (disabled || loading) return;
     setLoading(true);
+    setNoAd(false);
 
     if (typeof window !== "undefined" && window.adBreak) {
       window.adBreak({
@@ -92,6 +96,7 @@ export default function RewardedAd({
         afterAd: () => {},
         adViewed: () => {
           setLoading(false);
+          setNoAd(false);
           onReward();
         },
         adDismissed: () => {
@@ -105,40 +110,48 @@ export default function RewardedAd({
         },
       });
     } else {
-      setTimeout(() => {
-        setLoading(false);
-        onReward();
-      }, 500);
+      // No ad API loaded at all
+      setLoading(false);
+      setNoAd(true);
     }
   }, [adName, onReward, onDismiss, disabled, loading, showInterstitialFallback]);
 
   return (
-    <button
-      onClick={showAd}
-      disabled={disabled || loading}
-      className={`flex items-center justify-center gap-2 font-bold py-3 px-6 rounded-sm pixel-btn transition-all duration-100 disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
-    >
-      {loading ? (
-        <>
-          <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-          </svg>
-          Loading...
-        </>
-      ) : (
-        <span className="flex flex-col items-center gap-1">
-          <span className="text-base">{buttonText}</span>
-          {adLabel && (
-            <span className="flex items-center gap-1 text-[10px] opacity-75 font-normal">
-              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
-              </svg>
-              {adLabel}
-            </span>
-          )}
-        </span>
+    <div className="flex flex-col items-center gap-3 w-full">
+      <button
+        onClick={showAd}
+        disabled={disabled || loading}
+        className={`flex items-center justify-center gap-2 font-bold py-3 px-6 rounded-sm pixel-btn transition-all duration-100 disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+      >
+        {loading ? (
+          <>
+            <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+            Loading...
+          </>
+        ) : (
+          <span className="flex flex-col items-center gap-1">
+            <span className="text-base">{buttonText}</span>
+            {adLabel && (
+              <span className="flex items-center gap-1 text-[10px] opacity-75 font-normal">
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                </svg>
+                {adLabel}
+              </span>
+            )}
+          </span>
+        )}
+      </button>
+
+      {noAd && (
+        <div className="bg-coin-gold/10 border-2 border-coin-gold rounded-sm p-3 text-center text-sm w-full fade-in">
+          <p className="text-coin-gold font-bold mb-1">No ads available right now</p>
+          <p className="text-text-secondary text-xs">Please try again in a few minutes or try other quizzes in the meantime.</p>
+        </div>
       )}
-    </button>
+    </div>
   );
 }
