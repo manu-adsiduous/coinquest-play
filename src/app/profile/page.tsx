@@ -5,14 +5,29 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { allQuizzes } from "@/data/quizzes";
 
+const avatarEmojis = [
+  "😀", "😎", "🤩", "🥳", "😈", "👻", "🤖", "👾",
+  "🐱", "🐶", "🦊", "🐸", "🐵", "🦁", "🐼", "🐧",
+  "🎮", "🕹️", "🏆", "⚡", "🔥", "💎", "🌟", "🚀",
+  "🦸", "🧙", "🥷", "🤠", "👑", "🎯", "🍕", "🌈",
+];
+
 export default function ProfilePage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [completedCount, setCompletedCount] = useState(0);
+  const [avatar, setAvatar] = useState("👤");
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) router.push("/login");
   }, [user, loading, router]);
+
+  useEffect(() => {
+    if (!user) return;
+    const saved = localStorage.getItem(`cq_avatar_${user.id}`);
+    if (saved) setAvatar(saved);
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -23,6 +38,12 @@ export default function ProfilePage() {
     };
     fetchStats();
   }, [user]);
+
+  const pickAvatar = (emoji: string) => {
+    setAvatar(emoji);
+    if (user) localStorage.setItem(`cq_avatar_${user.id}`, emoji);
+    setShowEmojiPicker(false);
+  };
 
   if (loading || !user) {
     return (
@@ -39,10 +60,35 @@ export default function ProfilePage() {
     <div className="max-w-2xl mx-auto px-4 py-8 fade-in">
       <div className="pixel-card p-8">
         <div className="text-center mb-8">
-          <div className="w-20 h-20 bg-card border-4 border-pixel-cyan rounded-sm flex items-center justify-center mx-auto mb-4">
-            <span className="text-4xl">👤</span>
+          {/* Avatar with emoji picker */}
+          <div className="relative inline-block">
+            <button
+              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+              className="w-20 h-20 bg-card border-4 border-pixel-cyan rounded-sm flex items-center justify-center mx-auto mb-1 hover:border-coin-gold transition-colors cursor-pointer"
+            >
+              <span className="text-4xl">{avatar}</span>
+            </button>
+            <span className="text-text-secondary text-[10px]">tap to change</span>
+
+            {showEmojiPicker && (
+              <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-72 pixel-card p-3 z-50 slide-up">
+                <p className="text-text-secondary text-xs mb-2 font-bold text-center">Pick Your Avatar</p>
+                <div className="grid grid-cols-8 gap-1">
+                  {avatarEmojis.map((emoji) => (
+                    <button
+                      key={emoji}
+                      onClick={() => pickAvatar(emoji)}
+                      className={`w-8 h-8 flex items-center justify-center rounded-sm text-lg hover:bg-card-hover transition-colors ${avatar === emoji ? "bg-pixel-cyan/20 border border-pixel-cyan" : ""}`}
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-          <h1 className="font-pixel text-xs text-white">{user.username}</h1>
+
+          <h1 className="font-pixel text-xs text-white mt-2">{user.username}</h1>
           <p className="text-text-secondary">{user.email}</p>
         </div>
 
@@ -57,8 +103,7 @@ export default function ProfilePage() {
           <div className="pixel-progress pixel-progress-gold mt-3">
             <div className="pixel-progress-fill" style={{ width: `${progressToGoal}%` }} />
           </div>
-          <div className="flex justify-between text-sm mt-2">
-            <span className="text-text-secondary">{user.coins} / 400 coins</span>
+          <div className="text-sm mt-2 text-right">
             {coinsNeeded > 0 ? (
               <span className="text-text-secondary">{coinsNeeded} more to cash out</span>
             ) : (
