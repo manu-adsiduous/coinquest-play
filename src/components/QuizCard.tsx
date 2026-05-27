@@ -2,14 +2,34 @@
 
 import Link from "next/link";
 import type { Quiz } from "@/lib/types";
+import { MAX_COINS_PER_QUIZ } from "@/lib/coins";
 
-export default function QuizCard({ quiz, completed }: { quiz: Quiz; completed: boolean }) {
+export default function QuizCard({
+  quiz,
+  completed,
+  coinsRemaining,
+  coinsEarned,
+}: {
+  quiz: Quiz;
+  completed: boolean;
+  coinsRemaining?: number;
+  coinsEarned?: number;
+}) {
+  const remaining = coinsRemaining ?? MAX_COINS_PER_QUIZ;
+  const earned = coinsEarned ?? 0;
+  const maxedOut = earned >= MAX_COINS_PER_QUIZ;
+
   return (
     <Link href={`/quiz/${quiz.id}`} className="group block">
-      <div className={`relative pixel-card pixel-card-hover transition-all duration-200 overflow-hidden ${completed ? "border-roblox-green" : ""} group-hover:-translate-y-1`}>
-        {completed && (
+      <div className={`relative pixel-card pixel-card-hover transition-all duration-200 overflow-hidden ${maxedOut ? "border-roblox-green" : completed ? "border-coin-gold" : ""} group-hover:-translate-y-1`}>
+        {maxedOut && (
           <div className="absolute top-2 right-2 bg-roblox-green text-white font-pixel text-[7px] px-2 py-1 border-2 border-black rounded-sm">
-            DONE
+            MAX
+          </div>
+        )}
+        {completed && !maxedOut && (
+          <div className="absolute top-2 right-2 bg-coin-gold text-[#0d1b2a] font-pixel text-[7px] px-2 py-1 border-2 border-black rounded-sm">
+            {earned}/{MAX_COINS_PER_QUIZ}
           </div>
         )}
         <div className="p-5">
@@ -24,8 +44,13 @@ export default function QuizCard({ quiz, completed }: { quiz: Quiz; completed: b
             </span>
             <span className="text-xs text-text-secondary">{quiz.questions.length} Q</span>
           </div>
-          <div className="mt-3 flex items-center gap-2 text-coin-gold text-sm font-bold">
-            <span className="pixel-coin">C</span> +4 coins
+          <div className="mt-3 flex items-center gap-2 text-sm font-bold">
+            <span className="pixel-coin">C</span>
+            {maxedOut ? (
+              <span className="text-text-secondary">All coins earned</span>
+            ) : (
+              <span className="text-coin-gold">+{remaining} coin{remaining !== 1 ? "s" : ""}</span>
+            )}
           </div>
         </div>
       </div>

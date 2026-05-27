@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS quiz_completions (
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   quiz_id TEXT NOT NULL,
   score INTEGER DEFAULT 0,
+  coins_earned INTEGER DEFAULT 0,
   completed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   UNIQUE(user_id, quiz_id)
 );

@@ -11,12 +11,15 @@ export async function GET() {
 
     const sql = getDb();
     const result = await sql`
-      SELECT quiz_id FROM quiz_completions
+      SELECT quiz_id, coins_earned FROM quiz_completions
       WHERE user_id = ${session.userId}
     `;
 
     return NextResponse.json({
-      completions: result.map((r) => r.quiz_id),
+      completions: result.map((r) => ({
+        quizId: r.quiz_id,
+        coinsEarned: r.coins_earned ?? 0,
+      })),
     });
   } catch (error) {
     console.error("Completions error:", error);

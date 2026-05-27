@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import QuizCard from "@/components/QuizCard";
 import { allQuizzes } from "@/data/quizzes";
+import { MAX_COINS_PER_QUIZ } from "@/lib/coins";
 
 const categories = [
   "All",
@@ -21,26 +22,39 @@ const categories = [
   "Trivia",
 ];
 
+interface QuizCompletionInfo {
+  quizId: string;
+  coinsEarned: number;
+}
+
 export default function Home() {
   const { user } = useAuth();
   const [activeCategory, setActiveCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
-  const [completedQuizIds, setCompletedQuizIds] = useState<Set<string>>(new Set());
+  const [completions, setCompletions] = useState<QuizCompletionInfo[]>([]);
 
   useEffect(() => {
     if (!user) {
-      setCompletedQuizIds(new Set());
+      setCompletions([]);
       return;
     }
     const fetchCompletions = async () => {
       const res = await fetch("/api/quiz/completions");
       const data = await res.json();
       if (data.completions) {
-        setCompletedQuizIds(new Set(data.completions));
+        setCompletions(data.completions);
       }
     };
     fetchCompletions();
   }, [user]);
+
+  const completionMap = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const c of completions) {
+      map.set(c.quizId, c.coinsEarned);
+    }
+    return map;
+  }, [completions]);
 
   const filteredQuizzes = useMemo(() => {
     return allQuizzes.filter((q) => {
@@ -113,13 +127,19 @@ export default function Home() {
 
       {/* Quiz grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-        {filteredQuizzes.map((quiz) => (
-          <QuizCard
-            key={quiz.id}
-            quiz={quiz}
-            completed={completedQuizIds.has(quiz.id)}
-          />
-        ))}
+        {filteredQuizzes.map((quiz) => {
+          const coinsEarned = completionMap.get(quiz.id) ?? 0;
+          const coinsRemaining = MAX_COINS_PER_QUIZ - coinsEarned;
+          return (
+            <QuizCard
+              key={quiz.id}
+              quiz={quiz}
+              completed={completionMap.has(quiz.id)}
+              coinsRemaining={coinsRemaining}
+              coinsEarned={coinsEarned}
+            />
+          );
+        })}
       </div>
 
       {filteredQuizzes.length === 0 && (

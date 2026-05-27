@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { allQuizzes } from "@/data/quizzes";
 import { trackEvent } from "@/lib/analytics";
+import { scoreToCoins, MAX_COINS_PER_QUIZ } from "@/lib/coins";
 import RewardedAd from "@/components/RewardedAd";
 import { playCorrect, playWrong, playUnlock, playComplete, playCoins } from "@/lib/sounds";
 
@@ -22,16 +23,18 @@ export default function QuizPage() {
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [answers, setAnswers] = useState<number[]>([]);
   const [score, setScore] = useState(0);
-  const [alreadyCompleted, setAlreadyCompleted] = useState(false);
-  const [coinsAwarded, setCoinsAwarded] = useState(false);
+  const [previousCoinsEarned, setPreviousCoinsEarned] = useState(0);
+  const [coinsAwarded, setCoinsAwarded] = useState(0);
+  const [coinsEarnedThisAttempt, setCoinsEarnedThisAttempt] = useState(0);
 
   useEffect(() => {
     if (!user || !quiz) return;
     const checkCompletion = async () => {
       const res = await fetch("/api/quiz/completions");
       const data = await res.json();
-      if (data.completions?.includes(quiz.id)) {
-        setAlreadyCompleted(true);
+      const completion = data.completions?.find((c: { quizId: string }) => c.quizId === quiz.id);
+      if (completion) {
+        setPreviousCoinsEarned(completion.coinsEarned ?? 0);
       }
     };
     checkCompletion();
@@ -57,7 +60,6 @@ export default function QuizPage() {
       playWrong();
     }
 
-    // Auto-advance after short delay
     setTimeout(() => {
       if (quiz && currentQuestion < quiz.questions.length - 1) {
         setCurrentQuestion((q) => q + 1);
@@ -66,6 +68,16 @@ export default function QuizPage() {
         setState("finished");
       }
     }, 1000);
+  };
+
+  const handleRetake = () => {
+    setState("locked");
+    setCurrentQuestion(0);
+    setSelectedAnswer(null);
+    setAnswers([]);
+    setScore(0);
+    setCoinsAwarded(0);
+    setCoinsEarnedThisAttempt(0);
   };
 
   const handleResultsReward = useCallback(async () => {
@@ -80,18 +92,21 @@ export default function QuizPage() {
 
     if (!quiz) return;
 
-    // Guest users: track session coins
+    const coinsForScore = scoreToCoins(score);
+    setCoinsEarnedThisAttempt(coinsForScore);
+
+    // Guest users: track session coins based on score
     if (!user) {
-      setCoinsAwarded(true);
-      addSessionCoins(4);
-      playCoins();
-      trackEvent("coins_earned", { amount: 4, quiz_id: quiz.id, guest: true });
+      if (coinsForScore > 0) {
+        addSessionCoins(coinsForScore);
+        setCoinsAwarded(coinsForScore);
+        playCoins();
+        trackEvent("coins_earned", { amount: coinsForScore, quiz_id: quiz.id, guest: true });
+      }
       return;
     }
 
-    if (alreadyCompleted) return;
-
-    // Award coins via API
+    // Logged-in users: award via API (handles retake logic server-side)
     const res = await fetch("/api/quiz/complete", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -99,13 +114,14 @@ export default function QuizPage() {
     });
     const data = await res.json();
 
-    if (data.coins > 0) {
-      setCoinsAwarded(true);
+    if (data.coinsAwarded > 0) {
+      setCoinsAwarded(data.coinsAwarded);
       playCoins();
-      trackEvent("coins_earned", { amount: data.coins, quiz_id: quiz.id });
+      trackEvent("coins_earned", { amount: data.coinsAwarded, quiz_id: quiz.id });
     }
+    setPreviousCoinsEarned(Math.max(previousCoinsEarned, coinsForScore));
     await refreshProfile();
-  }, [quiz, score, user, alreadyCompleted, refreshProfile, addSessionCoins]);
+  }, [quiz, score, user, previousCoinsEarned, refreshProfile, addSessionCoins]);
 
   if (!quiz) {
     return (
@@ -122,7 +138,10 @@ export default function QuizPage() {
     );
   }
 
-  // LOCKED state - need to watch ad to unlock
+  const canEarnMore = previousCoinsEarned < MAX_COINS_PER_QUIZ;
+  const maxedOut = previousCoinsEarned >= MAX_COINS_PER_QUIZ;
+
+  // LOCKED state
   if (state === "locked") {
     return (
       <div className="max-w-2xl mx-auto px-4 py-8 fade-in">
@@ -133,12 +152,25 @@ export default function QuizPage() {
           <div className="flex items-center justify-center gap-4 text-sm text-text-secondary mb-6">
             <span className="bg-pixel-blue/20 text-pixel-blue px-3 py-1 rounded-sm border border-pixel-blue/40">{quiz.category}</span>
             <span>{quiz.questions.length} questions</span>
-            <span className="text-coin-gold font-bold">🪙 +4 coins</span>
+            {canEarnMore ? (
+              <span className="text-coin-gold font-bold flex items-center gap-1">
+                <span className="pixel-coin" style={{ width: 14, height: 14, fontSize: 6 }}>C</span>
+                +{MAX_COINS_PER_QUIZ - previousCoinsEarned} coin{MAX_COINS_PER_QUIZ - previousCoinsEarned !== 1 ? "s" : ""}
+              </span>
+            ) : (
+              <span className="text-text-secondary font-bold">All coins earned</span>
+            )}
           </div>
 
-          {alreadyCompleted && (
+          {previousCoinsEarned > 0 && canEarnMore && (
             <div className="bg-coin-gold/10 border-2 border-coin-gold text-coin-gold px-4 py-3 rounded-sm mb-4 text-sm">
-              You&apos;ve already completed this quiz. You can play again but won&apos;t earn additional coins.
+              You&apos;ve earned {previousCoinsEarned}/{MAX_COINS_PER_QUIZ} coins. Get 8+ correct to earn all 4!
+            </div>
+          )}
+
+          {maxedOut && (
+            <div className="bg-roblox-green/10 border-2 border-roblox-green text-roblox-green px-4 py-3 rounded-sm mb-4 text-sm">
+              You&apos;ve earned all {MAX_COINS_PER_QUIZ} coins for this quiz. Play for fun!
             </div>
           )}
 
@@ -162,7 +194,6 @@ export default function QuizPage() {
     return (
       <div className="max-w-2xl mx-auto px-4 py-8 fade-in">
         <div className="pixel-card p-8">
-          {/* Progress bar */}
           <div className="mb-6">
             <div className="flex justify-between text-sm text-text-secondary mb-2">
               <span>Question {currentQuestion + 1} of {quiz.questions.length}</span>
@@ -173,10 +204,8 @@ export default function QuizPage() {
             </div>
           </div>
 
-          {/* Question */}
           <h2 className="text-lg font-bold text-white mb-6">{question.question}</h2>
 
-          {/* Options */}
           <div className="space-y-3">
             {question.options.map((option, index) => {
               let buttonClass = "w-full text-left p-4 rounded-sm transition-all font-medium ";
@@ -212,7 +241,7 @@ export default function QuizPage() {
     );
   }
 
-  // FINISHED state - need to watch ad to see results
+  // FINISHED state
   if (state === "finished") {
     return (
       <div className="max-w-2xl mx-auto px-4 py-8 fade-in">
@@ -233,6 +262,10 @@ export default function QuizPage() {
   }
 
   // RESULTS state
+  const totalCoinsNow = Math.max(previousCoinsEarned, coinsEarnedThisAttempt);
+  const coinsStillAvailable = MAX_COINS_PER_QUIZ - totalCoinsNow;
+  const canRetakeForMore = coinsStillAvailable > 0 && user;
+
   return (
     <div className="max-w-2xl mx-auto px-4 py-8 fade-in">
       <div className="pixel-card p-8 text-center">
@@ -251,16 +284,38 @@ export default function QuizPage() {
         </p>
         <p className="text-text-secondary mb-4">correct answers</p>
 
-        {coinsAwarded && (
-          <div className="bg-coin-gold/10 border-2 border-coin-gold rounded-sm p-4 mb-6 slide-up">
-            <span className="text-2xl coin-bounce inline-block">🪙</span>
-            <p className="text-coin-gold font-bold text-lg">+4 coins earned!</p>
+        {/* Coins earned this attempt */}
+        {coinsAwarded > 0 && (
+          <div className="bg-coin-gold/10 border-2 border-coin-gold rounded-sm p-4 mb-4 slide-up">
+            <div className="flex items-center justify-center gap-2 mb-1">
+              <span className="pixel-coin coin-bounce">C</span>
+              <span className="text-coin-gold font-bold text-lg">+{coinsAwarded} coin{coinsAwarded !== 1 ? "s" : ""} earned!</span>
+            </div>
+            <p className="text-text-secondary text-xs">
+              {coinsEarnedThisAttempt}/{MAX_COINS_PER_QUIZ} coins for this quiz
+              {coinsStillAvailable > 0 && ` — get 8+ correct to earn more!`}
+            </p>
           </div>
         )}
 
+        {coinsAwarded === 0 && coinsEarnedThisAttempt > 0 && user && (
+          <div className="bg-card rounded-sm p-4 mb-4 text-text-secondary text-sm border-2 border-border-pixel">
+            You earned {coinsEarnedThisAttempt} coin{coinsEarnedThisAttempt !== 1 ? "s" : ""} this attempt, but you already had {previousCoinsEarned} from a previous try. No additional coins this time.
+          </div>
+        )}
+
+        {coinsEarnedThisAttempt === 0 && (
+          <div className="bg-roblox-red/10 border-2 border-roblox-red rounded-sm p-4 mb-4 text-roblox-red text-sm">
+            Get at least 1 answer correct to earn coins!
+          </div>
+        )}
+
+        {/* Guest signup prompt */}
         {!user && (
-          <div className="bg-pixel-blue/10 border-2 border-pixel-blue rounded-sm p-5 mb-6 fade-in">
-            <p className="text-coin-gold font-bold text-lg mb-1">🪙 You earned 4 coins!</p>
+          <div className="bg-pixel-blue/10 border-2 border-pixel-blue rounded-sm p-5 mb-4 fade-in">
+            <p className="text-coin-gold font-bold text-lg mb-1">
+              <span className="pixel-coin inline-block mr-1">C</span> You earned {coinsEarnedThisAttempt} coin{coinsEarnedThisAttempt !== 1 ? "s" : ""}!
+            </p>
             <p className="text-pixel-blue text-sm mb-3">
               Sign up now to save your coins and cash out for Robux gift cards at 400 coins!
             </p>
@@ -281,11 +336,16 @@ export default function QuizPage() {
           </div>
         )}
 
-        {alreadyCompleted && !coinsAwarded && (
-          <div className="bg-card rounded-sm p-4 mb-6 text-text-secondary text-sm border-2 border-border-pixel">
-            No additional coins — you&apos;ve completed this quiz before.
+        {/* Score breakdown */}
+        <div className="bg-card border-2 border-border-pixel rounded-sm p-4 mb-4 text-sm text-left">
+          <p className="text-text-secondary mb-2 font-bold">Coin Rewards:</p>
+          <div className="grid grid-cols-2 gap-1 text-xs">
+            <span className={score >= 8 ? "text-coin-gold font-bold" : "text-text-secondary"}>8-10 correct = 4 coins</span>
+            <span className={score >= 6 && score < 8 ? "text-coin-gold font-bold" : "text-text-secondary"}>6-7 correct = 3 coins</span>
+            <span className={score >= 4 && score < 6 ? "text-coin-gold font-bold" : "text-text-secondary"}>4-5 correct = 2 coins</span>
+            <span className={score >= 1 && score < 4 ? "text-coin-gold font-bold" : "text-text-secondary"}>1-3 correct = 1 coin</span>
           </div>
-        )}
+        </div>
 
         {/* Answer review */}
         <div className="text-left mt-6 space-y-3">
@@ -303,21 +363,46 @@ export default function QuizPage() {
           ))}
         </div>
 
-        <div className="flex gap-3 mt-8">
-          <button
-            onClick={() => router.push("/")}
-            className="flex-1 pixel-btn bg-pixel-blue text-white font-bold py-3 rounded-sm"
-          >
-            More Quizzes
-          </button>
-          {(user?.coins ?? 0) >= 400 && (
+        <div className="flex flex-col gap-3 mt-8">
+          {/* Retake button - show if user can still earn more coins */}
+          {canRetakeForMore && (
             <button
-              onClick={() => router.push("/cashout")}
-              className="flex-1 pixel-btn bg-roblox-green text-white font-bold py-3 rounded-sm"
+              onClick={handleRetake}
+              className="w-full pixel-btn bg-coin-gold text-[#0d1b2a] font-bold py-3 rounded-sm text-lg"
             >
-              Cash Out!
+              <span className="flex items-center justify-center gap-2">
+                <span className="pixel-coin" style={{ borderColor: "#0d1b2a" }}>C</span>
+                Retake Quiz — earn up to {coinsStillAvailable} more coin{coinsStillAvailable !== 1 ? "s" : ""}
+              </span>
             </button>
           )}
+
+          {/* Guest retake - always allow */}
+          {!user && coinsEarnedThisAttempt < MAX_COINS_PER_QUIZ && (
+            <button
+              onClick={handleRetake}
+              className="w-full pixel-btn bg-coin-gold text-[#0d1b2a] font-bold py-3 rounded-sm text-lg"
+            >
+              Retake Quiz
+            </button>
+          )}
+
+          <div className="flex gap-3">
+            <button
+              onClick={() => router.push("/")}
+              className="flex-1 pixel-btn bg-pixel-blue text-white font-bold py-3 rounded-sm"
+            >
+              More Quizzes
+            </button>
+            {(user?.coins ?? 0) >= 400 && (
+              <button
+                onClick={() => router.push("/cashout")}
+                className="flex-1 pixel-btn bg-roblox-green text-white font-bold py-3 rounded-sm"
+              >
+                Cash Out!
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>
