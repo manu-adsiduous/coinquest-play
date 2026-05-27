@@ -1,7 +1,15 @@
+import { createHash } from "crypto";
 import { getDb } from "./db";
 
 interface EventProperties {
   [key: string]: string | number | boolean | null | undefined;
+}
+
+interface MetaBrowserData {
+  fbc?: string;
+  fbp?: string;
+  sourceUrl?: string;
+  email?: string;
 }
 
 // Map our event names to Meta standard/custom events
@@ -16,6 +24,10 @@ const META_EVENT_MAP: Record<string, string> = {
   cashout: "Purchase",
 };
 
+function sha256(value: string): string {
+  return createHash("sha256").update(value.trim().toLowerCase()).digest("hex");
+}
+
 /** Log an event to the database and send to Meta CAPI */
 export async function trackServerEvent(
   eventName: string,
@@ -24,6 +36,7 @@ export async function trackServerEvent(
   userAgent?: string,
   ip?: string,
   eventId?: string,
+  browserData?: MetaBrowserData,
 ) {
   // Store in database
   const sql = getDb();
@@ -40,7 +53,7 @@ export async function trackServerEvent(
   const datasetId = process.env.META_DATASET_ID;
   const accessToken = process.env.META_ACCESS_TOKEN;
   if (datasetId && accessToken) {
-    sendToMeta(datasetId, accessToken, eventName, userId, properties, userAgent, ip, eventId).catch((e) =>
+    sendToMeta(datasetId, accessToken, eventName, userId, properties, userAgent, ip, eventId, browserData).catch((e) =>
       console.error("Meta event error:", e)
     );
   }
@@ -55,25 +68,29 @@ async function sendToMeta(
   userAgent?: string,
   ip?: string,
   eventId?: string,
+  browserData?: MetaBrowserData,
 ) {
   const metaEventName = META_EVENT_MAP[eventName] || eventName;
+
+  // Build user_data with all available identifiers
+  const userData: Record<string, string> = {};
+  if (userId) userData.external_id = sha256(String(userId));
+  if (ip) userData.client_ip_address = ip;
+  if (userAgent) userData.client_user_agent = userAgent;
+  if (browserData?.email) userData.em = sha256(browserData.email);
+  if (browserData?.fbc) userData.fbc = browserData.fbc;
+  if (browserData?.fbp) userData.fbp = browserData.fbp;
 
   const eventData: Record<string, unknown> = {
     event_name: metaEventName,
     event_time: Math.floor(Date.now() / 1000),
     action_source: "website",
-    user_data: {
-      ...(userId ? { external_id: String(userId) } : {}),
-      ...(ip ? { client_ip_address: ip } : {}),
-      ...(userAgent ? { client_user_agent: userAgent } : {}),
-    },
+    user_data: userData,
     custom_data: properties,
   };
 
-  // event_id for deduplication with Pixel
-  if (eventId) {
-    eventData.event_id = eventId;
-  }
+  if (eventId) eventData.event_id = eventId;
+  if (browserData?.sourceUrl) eventData.event_source_url = browserData.sourceUrl;
 
   await fetch(
     `https://graph.facebook.com/v21.0/${datasetId}/events?access_token=${accessToken}`,

@@ -37,7 +37,7 @@ export async function POST(req: Request) {
     const user = result[0];
     const token = signToken({ userId: user.id, email: user.email });
     const h = await headers();
-    trackServerEvent("sign_up", user.id, { method: "email" }, h.get("user-agent") || undefined, h.get("x-forwarded-for")?.split(",")[0]?.trim() || undefined);
+    trackServerEvent("sign_up", user.id, { method: "email" }, h.get("user-agent") || undefined, h.get("x-forwarded-for")?.split(",")[0]?.trim() || undefined, undefined, { email });
 
     const response = NextResponse.json({
       user: { id: user.id, email: user.email, username: user.username, coins: user.coins },

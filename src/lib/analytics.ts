@@ -21,20 +21,27 @@ function generateEventId(): string {
   return `${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
 }
 
+function getCookie(name: string): string | undefined {
+  if (typeof document === "undefined") return undefined;
+  const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
+  return match ? decodeURIComponent(match[1]) : undefined;
+}
+
 export function trackEvent(eventName: string, params?: Record<string, unknown>) {
+  if (typeof window === "undefined") return;
+
   const eventId = generateEventId();
 
   // Google Analytics
-  if (typeof window !== "undefined" && window.gtag) {
+  if (window.gtag) {
     window.gtag("event", eventName, params);
   }
 
   // Meta Pixel (client-side)
-  if (typeof window !== "undefined" && window.fbq) {
+  if (window.fbq) {
     const metaEvent = META_EVENT_MAP[eventName] || eventName;
     const metaParams = { ...params, eventID: eventId };
 
-    // Use trackSingle for standard events, trackSingleCustom for custom
     const standardEvents = ["PageView", "CompleteRegistration", "ViewContent", "Purchase"];
     if (standardEvents.includes(metaEvent)) {
       window.fbq("track", metaEvent, metaParams, { eventID: eventId });
@@ -43,16 +50,22 @@ export function trackEvent(eventName: string, params?: Record<string, unknown>) 
     }
   }
 
+  // Collect Meta browser params for CAPI
+  const fbc = getCookie("_fbc");
+  const fbp = getCookie("_fbp");
+  const sourceUrl = window.location.href;
+
   // Send to our server (database + Meta CAPI with same eventId for dedup)
-  if (typeof window !== "undefined") {
-    fetch("/api/track", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        event: eventName,
-        properties: params || {},
-        eventId,
-      }),
-    }).catch(() => {});
-  }
+  fetch("/api/track", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      event: eventName,
+      properties: params || {},
+      eventId,
+      fbc,
+      fbp,
+      sourceUrl,
+    }),
+  }).catch(() => {});
 }
