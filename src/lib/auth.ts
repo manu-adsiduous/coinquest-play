@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 
 const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-me";
 const COOKIE_NAME = "cq_session";
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "manu@adsiduous.com").split(",").map(e => e.trim());
 
 export interface JwtPayload {
   userId: string;
@@ -26,6 +27,13 @@ export async function getSessionUser(): Promise<JwtPayload | null> {
   const token = cookieStore.get(COOKIE_NAME)?.value;
   if (!token) return null;
   return verifyToken(token);
+}
+
+export async function getAdminUser(): Promise<JwtPayload | null> {
+  const user = await getSessionUser();
+  if (!user) return null;
+  if (!ADMIN_EMAILS.includes(user.email)) return null;
+  return user;
 }
 
 export function sessionCookieOptions(token: string) {
