@@ -47,11 +47,11 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               window.adsbygoogle = window.adsbygoogle || [];
-              const adBreak = adConfig = function(o) {
+              window.adBreak = window.adConfig = function(o) {
                 console.log('[AdPlacement]', o.type || 'adConfig', o);
-                adsbygoogle.push(o);
+                window.adsbygoogle.push(o);
               };
-              adConfig({
+              window.adConfig({
                 preloadAdBreaks: 'on',
                 sound: 'on',
                 onReady: function() { console.log('[AdPlacement] API ready'); }
