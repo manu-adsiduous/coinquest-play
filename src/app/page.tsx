@@ -59,12 +59,11 @@ export default function Home() {
       {/* Hero */}
       <div className="text-center mb-10">
         <h1 className="text-4xl md:text-5xl font-extrabold mb-4">
-          <span className="text-purple-600">Play Quizzes.</span>{" "}
-          <span className="text-yellow-500">Earn Coins.</span>{" "}
-          <span className="text-green-500">Get FREE Robux!</span>
+          <span className="text-purple-600">Complete quizzes.</span>{" "}
+          <span className="text-green-500">Get FREE Robux.</span>
         </h1>
         <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-          Complete quizzes to earn coins. Cash out for real Robux gift cards.
+          Each quiz allows you to collect coins that you can cash out as Robux!
         </p>
         {!user && (
           <div className="mt-6 flex justify-center gap-4">
