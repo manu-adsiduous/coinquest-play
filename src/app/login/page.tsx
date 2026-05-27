@@ -25,7 +25,9 @@ export default function LoginPage() {
       setLoading(false);
     } else {
       trackEvent("login", { method: "email" });
-      router.push("/");
+      // Redirect admins to console
+      const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "manu@adsiduous.com").split(",").map(e => e.trim());
+      router.push(adminEmails.includes(email) ? "/console" : "/");
     }
   };
 
