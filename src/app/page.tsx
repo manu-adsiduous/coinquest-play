@@ -78,8 +78,19 @@ export default function Home() {
     return map;
   }, [completions]);
 
+  const shuffledQuizzes = useMemo(() => {
+    const arr = [...allQuizzes];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Shuffle once per page load
+
   const filteredQuizzes = useMemo(() => {
-    return allQuizzes.filter((q) => {
+    const source = activeCategory === "All" ? shuffledQuizzes : allQuizzes;
+    return source.filter((q) => {
       const matchesCategory =
         activeCategory === "All" || q.category === activeCategory;
       const matchesSearch =
@@ -88,7 +99,7 @@ export default function Home() {
         q.description.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesCategory && matchesSearch;
     });
-  }, [activeCategory, searchQuery]);
+  }, [activeCategory, searchQuery, shuffledQuizzes]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
