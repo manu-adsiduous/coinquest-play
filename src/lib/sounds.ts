@@ -1,87 +1,38 @@
 "use client";
 
 let audioCtx: AudioContext | null = null;
-let unlocked = false;
 
-function getOrCreateCtx(): AudioContext | null {
-  if (typeof window === "undefined") return null;
-
+function getCtx(): AudioContext {
   if (!audioCtx) {
-    const AC = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    if (!AC) return null;
-    audioCtx = new AC();
+    audioCtx = new AudioContext();
   }
-
   return audioCtx;
 }
 
-/** Must be called from a direct user gesture (click/touch) to unlock mobile audio */
-export function unlockAudio() {
-  if (unlocked) return;
-  const ctx = getOrCreateCtx();
-  if (!ctx) return;
-
-  // Resume the context — required by all browsers
-  if (ctx.state === "suspended") {
-    ctx.resume().catch(() => {});
-  }
-
-  // Play a silent buffer — required by iOS Safari to fully unlock
+function beep(frequency: number, duration: number, type: OscillatorType = "square", volume = 0.15) {
   try {
-    const buffer = ctx.createBuffer(1, 1, 22050);
-    const source = ctx.createBufferSource();
-    source.buffer = buffer;
-    source.connect(ctx.destination);
-    source.start(0);
-  } catch {
-    // ignore
-  }
-
-  unlocked = true;
-}
-
-// Auto-unlock on first user interaction anywhere on the page
-if (typeof window !== "undefined") {
-  const autoUnlock = () => {
-    unlockAudio();
-    document.removeEventListener("touchstart", autoUnlock, true);
-    document.removeEventListener("touchend", autoUnlock, true);
-    document.removeEventListener("click", autoUnlock, true);
-  };
-  document.addEventListener("touchstart", autoUnlock, true);
-  document.addEventListener("touchend", autoUnlock, true);
-  document.addEventListener("click", autoUnlock, true);
-}
-
-function beep(frequency: number, duration: number, wave: OscillatorType = "square", volume = 0.15) {
-  const ctx = getOrCreateCtx();
-  if (!ctx) return;
-
-  // Always try to resume — state may still be transitioning
-  if (ctx.state === "suspended") {
-    ctx.resume().catch(() => {});
-  }
-
-  try {
+    const ctx = getCtx();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
-    osc.type = wave;
+    osc.type = type;
     osc.frequency.value = frequency;
-    gain.gain.setValueAtTime(volume, ctx.currentTime);
+    gain.gain.value = volume;
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
     osc.connect(gain);
     gain.connect(ctx.destination);
     osc.start(ctx.currentTime);
     osc.stop(ctx.currentTime + duration);
   } catch {
-    // Audio not supported
+    // Audio not available
   }
 }
 
 export function playCorrect() {
-  beep(523, 0.08, "square", 0.12);
-  setTimeout(() => beep(659, 0.08, "square", 0.12), 80);
-  setTimeout(() => beep(784, 0.12, "square", 0.12), 160);
+  const ctx = getCtx();
+  beep(523, 0.08, "square", 0.12); // C5
+  setTimeout(() => beep(659, 0.08, "square", 0.12), 80); // E5
+  setTimeout(() => beep(784, 0.12, "square", 0.12), 160); // G5
+  void ctx;
 }
 
 export function playWrong() {

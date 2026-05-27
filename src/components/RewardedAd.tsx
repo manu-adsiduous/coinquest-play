@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { unlockAudio } from "@/lib/sounds";
 
 declare global {
   interface Window {
@@ -83,7 +82,6 @@ export default function RewardedAd({
 
   const showAd = useCallback(() => {
     if (disabled || loading) return;
-    unlockAudio(); // Unlock audio context on user gesture
     setLoading(true);
 
     if (typeof window !== "undefined" && window.adBreak) {
