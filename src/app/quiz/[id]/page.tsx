@@ -13,7 +13,7 @@ type QuizState = "locked" | "playing" | "finished" | "results";
 export default function QuizPage() {
   const params = useParams();
   const router = useRouter();
-  const { user, refreshProfile } = useAuth();
+  const { user, refreshProfile, addSessionCoins } = useAuth();
 
   const quiz = allQuizzes.find((q) => q.id === params.id);
 
@@ -78,7 +78,18 @@ export default function QuizPage() {
       total: quiz?.questions.length,
     });
 
-    if (!user || !quiz || alreadyCompleted) return;
+    if (!quiz) return;
+
+    // Guest users: track session coins
+    if (!user) {
+      setCoinsAwarded(true);
+      addSessionCoins(4);
+      playCoins();
+      trackEvent("coins_earned", { amount: 4, quiz_id: quiz.id, guest: true });
+      return;
+    }
+
+    if (alreadyCompleted) return;
 
     // Award coins via API
     const res = await fetch("/api/quiz/complete", {
@@ -94,7 +105,7 @@ export default function QuizPage() {
       trackEvent("coins_earned", { amount: data.coins, quiz_id: quiz.id });
     }
     await refreshProfile();
-  }, [quiz, score, user, alreadyCompleted, refreshProfile]);
+  }, [quiz, score, user, alreadyCompleted, refreshProfile, addSessionCoins]);
 
   if (!quiz) {
     return (
@@ -211,7 +222,7 @@ export default function QuizPage() {
           <p className="text-text-secondary mb-6">Watch a short ad to see your results and claim your coins!</p>
           <RewardedAd
             adName="quiz-results"
-            buttonText="See Results & Claim Coins"
+            buttonText={<span className="flex items-center gap-2"><span className="pixel-coin">C</span> Claim Your Coins For This Quiz</span>}
             adLabel="Watch Ad"
             onReward={handleResultsReward}
             className="bg-roblox-green text-white hover:brightness-110 w-full text-lg"

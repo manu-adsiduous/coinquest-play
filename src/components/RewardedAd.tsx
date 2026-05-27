@@ -35,7 +35,7 @@ interface AdPlacementInfo {
 
 interface RewardedAdProps {
   adName: string;
-  buttonText: string;
+  buttonText: React.ReactNode;
   adLabel?: string;
   onReward: () => void;
   onDismiss?: () => void;

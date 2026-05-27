@@ -6,6 +6,8 @@ import type { UserProfile } from "@/lib/types";
 interface AuthContextType {
   user: UserProfile | null;
   loading: boolean;
+  sessionCoins: number;
+  addSessionCoins: (amount: number) => void;
   signUp: (email: string, password: string, username: string) => Promise<{ error: string | null }>;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
@@ -15,6 +17,8 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
+  sessionCoins: 0,
+  addSessionCoins: () => {},
   signUp: async () => ({ error: null }),
   signIn: async () => ({ error: null }),
   signOut: async () => {},
@@ -26,6 +30,11 @@ export const useAuth = () => useContext(AuthContext);
 export default function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [sessionCoins, setSessionCoins] = useState(0);
+
+  const addSessionCoins = useCallback((amount: number) => {
+    setSessionCoins((prev) => prev + amount);
+  }, []);
 
   const fetchMe = useCallback(async () => {
     try {
@@ -55,6 +64,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
       const data = await res.json();
       if (!res.ok) return { error: data.error || "Signup failed" };
       setUser(data.user);
+      setSessionCoins(0);
       return { error: null };
     } catch {
       return { error: "Something went wrong" };
@@ -71,6 +81,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
       const data = await res.json();
       if (!res.ok) return { error: data.error || "Login failed" };
       setUser(data.user);
+      setSessionCoins(0);
       return { error: null };
     } catch {
       return { error: "Something went wrong" };
@@ -80,10 +91,11 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
   const signOut = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
     setUser(null);
+    setSessionCoins(0);
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signUp, signIn, signOut, refreshProfile }}>
+    <AuthContext.Provider value={{ user, loading, sessionCoins, addSessionCoins, signUp, signIn, signOut, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );
