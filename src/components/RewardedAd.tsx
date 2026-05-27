@@ -10,7 +10,7 @@ declare global {
 }
 
 interface AdBreakConfig {
-  type: "reward";
+  type: "reward" | "next";
   name: string;
   beforeAd?: () => void;
   afterAd?: () => void;
@@ -54,6 +54,32 @@ export default function RewardedAd({
 }: RewardedAdProps) {
   const [loading, setLoading] = useState(false);
 
+  const showInterstitialFallback = useCallback(() => {
+    if (typeof window === "undefined" || !window.adBreak) {
+      // No ad API at all — grant reward
+      setLoading(false);
+      onReward();
+      return;
+    }
+
+    window.adBreak({
+      type: "next",
+      name: `${adName}-interstitial`,
+      beforeAd: () => {},
+      afterAd: () => {},
+      adBreakDone: (placementInfo) => {
+        setLoading(false);
+        // Grant reward regardless — interstitial was either shown or unavailable
+        if (placementInfo.breakStatus === "viewed" || placementInfo.breakStatus === "notReady" || placementInfo.breakStatus === "frequencyCapped") {
+          onReward();
+        } else {
+          // dismissed — still grant since this is a fallback
+          onReward();
+        }
+      },
+    });
+  }, [adName, onReward]);
+
   const showAd = useCallback(() => {
     if (disabled || loading) return;
     setLoading(true);
@@ -76,19 +102,20 @@ export default function RewardedAd({
           onDismiss?.();
         },
         adBreakDone: (placementInfo) => {
+          // Rewarded ad not available — fall back to interstitial
           if (placementInfo.breakStatus === "notReady" || placementInfo.breakStatus === "frequencyCapped") {
-            setLoading(false);
-            onReward();
+            showInterstitialFallback();
           }
         },
       });
     } else {
+      // Development fallback
       setTimeout(() => {
         setLoading(false);
         onReward();
       }, 500);
     }
-  }, [adName, onReward, onDismiss, disabled, loading]);
+  }, [adName, onReward, onDismiss, disabled, loading, showInterstitialFallback]);
 
   return (
     <button
