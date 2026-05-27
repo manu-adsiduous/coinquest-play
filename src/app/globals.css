@@ -1,46 +1,191 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f5f3ff;
-  --foreground: #1e1b4b;
+  --bg-dark: #1a1a2e;
+  --bg-card: #16213e;
+  --bg-card-hover: #1f3460;
+  --roblox-green: #00B06F;
+  --roblox-red: #E74856;
+  --coin-gold: #FFD700;
+  --coin-dark: #B8860B;
+  --pixel-blue: #3B82F6;
+  --pixel-cyan: #00D4FF;
+  --pixel-magenta: #FF6BCB;
+  --text-primary: #E8E8E8;
+  --text-secondary: #9CA3AF;
+  --border-pixel: #2A2A4A;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--bg-dark);
+  --color-foreground: var(--text-primary);
+  --color-roblox-green: #00B06F;
+  --color-roblox-red: #E74856;
+  --color-coin-gold: #FFD700;
+  --color-coin-dark: #B8860B;
+  --color-pixel-blue: #3B82F6;
+  --color-pixel-cyan: #00D4FF;
+  --color-pixel-magenta: #FF6BCB;
+  --color-card: #16213e;
+  --color-card-hover: #1f3460;
+  --color-border-pixel: #2A2A4A;
+  --color-text-primary: #E8E8E8;
+  --color-text-secondary: #9CA3AF;
+  --font-pixel: var(--font-press-start);
+  --font-body: var(--font-nunito);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  background: var(--bg-dark);
+  color: var(--text-primary);
+  font-family: var(--font-body), Arial, Helvetica, sans-serif;
+  background-image:
+    repeating-linear-gradient(
+      0deg, transparent, transparent 31px, rgba(255,255,255,0.015) 31px, rgba(255,255,255,0.015) 32px
+    ),
+    repeating-linear-gradient(
+      90deg, transparent, transparent 31px, rgba(255,255,255,0.015) 31px, rgba(255,255,255,0.015) 32px
+    );
 }
 
+/* Pixel button */
+.pixel-btn {
+  border: 3px solid #000;
+  box-shadow: 4px 4px 0px #000;
+  transition: all 0.1s ease;
+  border-radius: 2px;
+  cursor: pointer;
+}
+.pixel-btn:active:not(:disabled) {
+  box-shadow: 1px 1px 0px #000;
+  transform: translate(3px, 3px);
+}
+.pixel-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Pixel card */
+.pixel-card {
+  border: 3px solid var(--border-pixel);
+  box-shadow: 6px 6px 0px rgba(0,0,0,0.5);
+  border-radius: 2px;
+  background: var(--bg-card);
+}
+.pixel-card-hover:hover {
+  box-shadow: 8px 8px 0px rgba(0,0,0,0.6);
+  border-color: var(--pixel-cyan);
+}
+
+/* Pixel input */
+.pixel-input {
+  border: 3px solid var(--border-pixel);
+  border-radius: 2px;
+  background: #0d1b2a;
+  color: var(--text-primary);
+  box-shadow: inset 2px 2px 0px rgba(0,0,0,0.3);
+}
+.pixel-input:focus {
+  border-color: var(--pixel-cyan);
+  outline: none;
+  box-shadow: inset 2px 2px 0px rgba(0,0,0,0.3), 0 0 0 2px rgba(0,212,255,0.3);
+}
+.pixel-input::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.5;
+}
+
+/* Pixel progress bar */
+.pixel-progress {
+  background: #0d1b2a;
+  border: 2px solid var(--border-pixel);
+  border-radius: 0;
+  height: 16px;
+}
+.pixel-progress-fill {
+  background: repeating-linear-gradient(
+    90deg,
+    var(--roblox-green) 0px, var(--roblox-green) 10px,
+    #009b5e 10px, #009b5e 12px
+  );
+  height: 100%;
+  transition: width 0.3s ease;
+}
+.pixel-progress-gold .pixel-progress-fill {
+  background: repeating-linear-gradient(
+    90deg,
+    var(--coin-gold) 0px, var(--coin-gold) 10px,
+    #ccac00 10px, #ccac00 12px
+  );
+}
+
+/* Pixel coin */
+.pixel-coin {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background: var(--coin-gold);
+  border: 2px solid var(--coin-dark);
+  border-radius: 2px;
+  box-shadow: inset -2px -2px 0px rgba(0,0,0,0.2), inset 2px 2px 0px rgba(255,255,255,0.3);
+  font-family: var(--font-pixel);
+  font-size: 7px;
+  color: var(--coin-dark);
+  flex-shrink: 0;
+}
+
+/* Pixel font helper */
+.font-pixel {
+  font-family: var(--font-pixel), monospace;
+}
+
+/* Animations */
 @keyframes coin-bounce {
   0%, 100% { transform: translateY(0); }
+  25% { transform: translateY(-5px) rotate(-3deg); }
   50% { transform: translateY(-8px); }
+  75% { transform: translateY(-5px) rotate(3deg); }
 }
-
-.coin-bounce {
-  animation: coin-bounce 1s ease-in-out infinite;
-}
+.coin-bounce { animation: coin-bounce 1s ease-in-out infinite; }
 
 @keyframes fade-in {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
+.fade-in { animation: fade-in 0.3s ease-out; }
 
-.fade-in {
-  animation: fade-in 0.4s ease-out;
+@keyframes pixel-glow {
+  0%, 100% { box-shadow: 6px 6px 0px #000, 0 0 5px var(--pixel-cyan); }
+  50% { box-shadow: 6px 6px 0px #000, 0 0 15px var(--pixel-cyan), 0 0 30px rgba(0,212,255,0.3); }
 }
+.pixel-glow { animation: pixel-glow 2s ease-in-out infinite; }
 
-@keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 5px rgba(168, 85, 247, 0.4); }
-  50% { box-shadow: 0 0 20px rgba(168, 85, 247, 0.8); }
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-3px); }
+  40% { transform: translateX(3px); }
+  60% { transform: translateX(-2px); }
+  80% { transform: translateX(2px); }
 }
+.shake { animation: shake 0.4s ease; }
 
-.pulse-glow {
-  animation: pulse-glow 2s ease-in-out infinite;
+@keyframes correct-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
 }
+.correct-pulse { animation: correct-pulse 0.3s ease; }
+
+@keyframes coin-fly {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-40px) scale(1.5); }
+}
+.coin-fly { animation: coin-fly 0.6s ease-out forwards; }
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.slide-up { animation: slide-up 0.4s ease-out; }

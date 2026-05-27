@@ -41,65 +41,65 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4">
-      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md fade-in">
+      <div className="pixel-card p-8 w-full max-w-md fade-in">
         <div className="text-center mb-6">
-          <div className="text-5xl mb-3">🎮</div>
-          <h1 className="text-2xl font-bold text-gray-900">Join CoinQuest!</h1>
-          <p className="text-gray-500 mt-1">Create an account to start earning Robux</p>
+          <span className="pixel-coin coin-bounce mx-auto mb-3 !w-8 !h-8 text-[10px]">C</span>
+          <h1 className="font-pixel text-sm text-white">Join CoinQuest!</h1>
+          <p className="text-text-secondary mt-1">Create an account to start earning Robux</p>
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-4 text-sm">
+          <div className="bg-roblox-red/10 border-2 border-roblox-red text-roblox-red px-4 py-3 rounded-sm mb-4 text-sm">
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+            <label className="block text-text-secondary text-sm font-medium mb-1">Username</label>
             <input
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
-              className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none transition-colors text-gray-900"
+              className="pixel-input w-full px-4 py-3 transition-colors"
               placeholder="CoolGamer123"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <label className="block text-text-secondary text-sm font-medium mb-1">Email</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none transition-colors text-gray-900"
+              className="pixel-input w-full px-4 py-3 transition-colors"
               placeholder="you@example.com"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <label className="block text-text-secondary text-sm font-medium mb-1">Password</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none transition-colors text-gray-900"
+              className="pixel-input w-full px-4 py-3 transition-colors"
               placeholder="At least 6 characters"
             />
           </div>
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-purple-600 text-white font-bold py-3 rounded-xl hover:bg-purple-700 transition-colors disabled:opacity-50"
+            className="w-full bg-roblox-green text-white font-bold py-3 rounded-sm pixel-btn hover:brightness-110 disabled:opacity-50"
           >
             {loading ? "Creating account..." : "Sign Up"}
           </button>
         </form>
 
-        <p className="text-center text-gray-500 text-sm mt-6">
+        <p className="text-center text-text-secondary text-sm mt-6">
           Already have an account?{" "}
-          <Link href="/login" className="text-purple-600 font-medium hover:underline">
+          <Link href="/login" className="text-pixel-cyan font-medium hover:underline">
             Log In
           </Link>
         </p>

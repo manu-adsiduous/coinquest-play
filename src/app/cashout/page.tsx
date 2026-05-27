@@ -43,78 +43,79 @@ export default function CashoutPage() {
   if (loading || !user) {
     return (
       <div className="min-h-[80vh] flex items-center justify-center">
-        <div className="animate-spin h-8 w-8 border-4 border-purple-600 border-t-transparent rounded-full" />
+        <div className="animate-spin h-8 w-8 border-4 border-pixel-cyan border-t-transparent rounded-full" />
       </div>
     );
   }
 
   return (
     <div className="max-w-lg mx-auto px-4 py-8 fade-in">
-      <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Cash Out</h1>
-        <p className="text-gray-500 mb-6">Redeem your coins for a Robux gift card!</p>
+      <div className="pixel-card p-8 text-center">
+        <h1 className="font-pixel text-sm text-white mb-2">Cash Out</h1>
+        <p className="text-text-secondary mb-6">Redeem your coins for a Robux gift card!</p>
 
         {giftCardCode ? (
           <div className="fade-in">
-            <div className="text-6xl mb-4">🎉</div>
-            <h2 className="text-2xl font-bold text-green-600 mb-4">Congratulations!</h2>
-            <p className="text-gray-600 mb-4">Here&apos;s your Robux gift card code:</p>
-            <div className="bg-gray-900 text-green-400 font-mono text-2xl py-4 px-6 rounded-xl mb-4 select-all">
+            <h2 className="font-pixel text-xs text-roblox-green mb-4">Congratulations!</h2>
+            <p className="text-text-secondary mb-4">Here&apos;s your Robux gift card code:</p>
+            <div className="bg-[#0d1117] text-roblox-green font-pixel text-sm md:text-base py-4 px-6 rounded-sm border-2 border-roblox-green select-all mb-4">
               {giftCardCode}
             </div>
-            <p className="text-sm text-gray-500 mb-6">
+            <p className="text-sm text-text-secondary mb-6">
               Copy this code and redeem it on the Roblox website to get your Robux!
             </p>
             <button
               onClick={() => router.push("/")}
-              className="bg-purple-600 text-white font-bold py-3 px-8 rounded-xl hover:bg-purple-700 transition-colors"
+              className="bg-pixel-blue text-white font-bold py-3 px-8 rounded-sm pixel-btn"
             >
               Keep Playing
             </button>
           </div>
         ) : (
           <>
-            <div className="bg-gradient-to-r from-yellow-50 to-amber-50 rounded-xl p-6 mb-6">
-              <div className="text-4xl mb-2 coin-bounce">🪙</div>
-              <div className="text-3xl font-bold text-yellow-600">{user.coins} coins</div>
-              <div className="text-sm text-gray-500 mt-1">400 coins needed</div>
+            <div className="bg-card border-2 border-coin-gold rounded-sm p-6 mb-6">
+              <div className="mb-2">
+                <span className="pixel-coin coin-bounce !w-10 !h-10 text-base">C</span>
+              </div>
+              <div className="text-3xl font-bold text-coin-gold">{user.coins} coins</div>
+              <div className="text-text-secondary text-sm mt-1">400 coins needed</div>
             </div>
 
             {user.coins >= 400 ? (
               <>
-                <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4 mb-6">
-                  <p className="text-green-700 font-medium">
+                <div className="bg-roblox-green/10 border-2 border-roblox-green rounded-sm p-4 mb-6">
+                  <p className="text-roblox-green font-medium">
                     You have enough coins! Cash out now to get a 400 Robux gift card code.
                   </p>
                 </div>
                 {error && (
-                  <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-4 text-sm">
+                  <div className="bg-roblox-red/10 border-2 border-roblox-red text-roblox-red px-4 py-3 rounded-sm mb-4 text-sm">
                     {error}
                   </div>
                 )}
                 <button
                   onClick={handleCashout}
                   disabled={redeeming}
-                  className="w-full bg-green-500 text-white font-bold py-4 rounded-xl hover:bg-green-600 transition-colors text-lg disabled:opacity-50"
+                  className="w-full bg-roblox-green text-white font-bold py-4 rounded-sm pixel-btn text-lg disabled:opacity-50"
                 >
-                  {redeeming ? "Redeeming..." : "🎁 Cash Out 400 Coins for Robux"}
+                  {redeeming ? "Redeeming..." : "Cash Out 400 Coins for Robux"}
                 </button>
               </>
             ) : (
               <>
-                <div className="w-full bg-gray-200 rounded-full h-4 mb-3">
+                <div className="pixel-progress pixel-progress-gold mb-3">
                   <div
-                    className="bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-full h-4 transition-all"
+                    className="pixel-progress-fill"
                     style={{ width: `${(user.coins / 400) * 100}%` }}
                   />
                 </div>
-                <p className="text-gray-500 mb-6">
-                  You need <span className="font-bold text-purple-600">{400 - user.coins} more coins</span> to cash out.
+                <p className="text-text-secondary mb-6">
+                  You need <span className="font-bold text-pixel-cyan">{400 - user.coins} more coins</span> to cash out.
                   Keep playing quizzes!
                 </p>
                 <button
                   onClick={() => router.push("/")}
-                  className="bg-purple-600 text-white font-bold py-3 px-8 rounded-xl hover:bg-purple-700 transition-colors"
+                  className="bg-pixel-blue text-white font-bold py-3 px-8 rounded-sm pixel-btn"
                 >
                   Browse Quizzes
                 </button>

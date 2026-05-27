@@ -6,26 +6,26 @@ import type { Quiz } from "@/lib/types";
 export default function QuizCard({ quiz, completed }: { quiz: Quiz; completed: boolean }) {
   return (
     <Link href={`/quiz/${quiz.id}`} className="group block">
-      <div className={`relative bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border-2 ${completed ? "border-green-400" : "border-transparent hover:border-purple-400"} group-hover:-translate-y-1`}>
+      <div className={`relative pixel-card pixel-card-hover transition-all duration-200 overflow-hidden ${completed ? "border-roblox-green" : ""} group-hover:-translate-y-1`}>
         {completed && (
-          <div className="absolute top-3 right-3 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-            Done!
+          <div className="absolute top-2 right-2 bg-roblox-green text-white font-pixel text-[7px] px-2 py-1 border-2 border-black rounded-sm">
+            DONE
           </div>
         )}
         <div className="p-5">
           <div className="text-4xl mb-3">{quiz.emoji}</div>
-          <h3 className="font-bold text-gray-900 text-lg mb-1 group-hover:text-purple-600 transition-colors">
+          <h3 className="font-bold text-white text-lg mb-1 group-hover:text-pixel-cyan transition-colors">
             {quiz.title}
           </h3>
-          <p className="text-gray-500 text-sm mb-3 line-clamp-2">{quiz.description}</p>
+          <p className="text-text-secondary text-sm mb-3 line-clamp-2">{quiz.description}</p>
           <div className="flex items-center justify-between">
-            <span className="text-xs bg-purple-100 text-purple-700 px-3 py-1 rounded-full font-medium">
+            <span className="text-[10px] bg-pixel-blue/20 text-pixel-blue px-3 py-1 rounded-sm border border-pixel-blue/40 font-medium">
               {quiz.category}
             </span>
-            <span className="text-xs text-gray-400">{quiz.questions.length} questions</span>
+            <span className="text-xs text-text-secondary">{quiz.questions.length} Q</span>
           </div>
-          <div className="mt-3 flex items-center gap-1 text-yellow-500 text-sm font-bold">
-            <span>🪙</span> +4 coins
+          <div className="mt-3 flex items-center gap-2 text-coin-gold text-sm font-bold">
+            <span className="pixel-coin">C</span> +4 coins
           </div>
         </div>
       </div>

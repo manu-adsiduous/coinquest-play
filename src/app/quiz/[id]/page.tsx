@@ -6,6 +6,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { allQuizzes } from "@/data/quizzes";
 import { trackEvent } from "@/lib/analytics";
 import RewardedAd from "@/components/RewardedAd";
+import { playCorrect, playWrong, playUnlock, playComplete, playCoins } from "@/lib/sounds";
 
 type QuizState = "locked" | "playing" | "finished" | "results";
 
@@ -37,6 +38,7 @@ export default function QuizPage() {
   }, [user, quiz]);
 
   const handleUnlockReward = useCallback(() => {
+    playUnlock();
     setState("playing");
     trackEvent("quiz_unlocked", { quiz_id: quiz?.id, quiz_title: quiz?.title });
   }, [quiz]);
@@ -50,6 +52,9 @@ export default function QuizPage() {
 
     if (quiz && answerIndex === quiz.questions[currentQuestion].correctAnswer) {
       setScore((s) => s + 1);
+      playCorrect();
+    } else {
+      playWrong();
     }
 
     // Auto-advance after short delay
@@ -65,6 +70,7 @@ export default function QuizPage() {
 
   const handleResultsReward = useCallback(async () => {
     setState("results");
+    playComplete();
     trackEvent("quiz_completed", {
       quiz_id: quiz?.id,
       quiz_title: quiz?.title,
@@ -84,6 +90,7 @@ export default function QuizPage() {
 
     if (data.coins > 0) {
       setCoinsAwarded(true);
+      playCoins();
       trackEvent("coins_earned", { amount: data.coins, quiz_id: quiz.id });
     }
     await refreshProfile();
@@ -93,10 +100,10 @@ export default function QuizPage() {
     return (
       <div className="min-h-[80vh] flex flex-col items-center justify-center">
         <p className="text-4xl mb-4">😕</p>
-        <p className="text-xl text-gray-600">Quiz not found</p>
+        <p className="text-xl text-text-secondary">Quiz not found</p>
         <button
           onClick={() => router.push("/")}
-          className="mt-4 bg-purple-600 text-white px-6 py-2 rounded-xl"
+          className="mt-4 pixel-btn bg-pixel-blue text-white px-6 py-2 rounded-sm"
         >
           Back to Quizzes
         </button>
@@ -108,18 +115,18 @@ export default function QuizPage() {
   if (state === "locked") {
     return (
       <div className="max-w-2xl mx-auto px-4 py-8 fade-in">
-        <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
+        <div className="pixel-card p-8 text-center">
           <div className="text-6xl mb-4">{quiz.emoji}</div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{quiz.title}</h1>
-          <p className="text-gray-500 mb-2">{quiz.description}</p>
-          <div className="flex items-center justify-center gap-4 text-sm text-gray-400 mb-6">
-            <span className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full">{quiz.category}</span>
+          <h1 className="font-pixel text-sm md:text-base text-white mb-2">{quiz.title}</h1>
+          <p className="text-text-secondary mb-2">{quiz.description}</p>
+          <div className="flex items-center justify-center gap-4 text-sm text-text-secondary mb-6">
+            <span className="bg-pixel-blue/20 text-pixel-blue px-3 py-1 rounded-sm border border-pixel-blue/40">{quiz.category}</span>
             <span>{quiz.questions.length} questions</span>
-            <span className="text-yellow-600 font-bold">🪙 +4 coins</span>
+            <span className="text-coin-gold font-bold">🪙 +4 coins</span>
           </div>
 
           {alreadyCompleted && (
-            <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded-xl mb-4 text-sm">
+            <div className="bg-coin-gold/10 border-2 border-coin-gold text-coin-gold px-4 py-3 rounded-sm mb-4 text-sm">
               You&apos;ve already completed this quiz. You can play again but won&apos;t earn additional coins.
             </div>
           )}
@@ -129,7 +136,7 @@ export default function QuizPage() {
             buttonText="Unlock This Quiz"
             adLabel="Watch Ad"
             onReward={handleUnlockReward}
-            className="bg-purple-600 text-white hover:bg-purple-700 w-full text-lg"
+            className="bg-roblox-green text-white hover:brightness-110 w-full text-lg"
           />
         </div>
       </div>
@@ -143,36 +150,33 @@ export default function QuizPage() {
 
     return (
       <div className="max-w-2xl mx-auto px-4 py-8 fade-in">
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="pixel-card p-8">
           {/* Progress bar */}
           <div className="mb-6">
-            <div className="flex justify-between text-sm text-gray-500 mb-2">
+            <div className="flex justify-between text-sm text-text-secondary mb-2">
               <span>Question {currentQuestion + 1} of {quiz.questions.length}</span>
-              <span>Score: {score}/{currentQuestion + (selectedAnswer !== null ? 1 : 0)}</span>
+              <span className="text-pixel-cyan">Score: {score}/{currentQuestion + (selectedAnswer !== null ? 1 : 0)}</span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-3">
-              <div
-                className="bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full h-3 transition-all duration-300"
-                style={{ width: `${progress}%` }}
-              />
+            <div className="pixel-progress">
+              <div className="pixel-progress-fill" style={{ width: `${progress}%` }} />
             </div>
           </div>
 
           {/* Question */}
-          <h2 className="text-xl font-bold text-gray-900 mb-6">{question.question}</h2>
+          <h2 className="text-lg font-bold text-white mb-6">{question.question}</h2>
 
           {/* Options */}
           <div className="space-y-3">
             {question.options.map((option, index) => {
-              let buttonClass = "w-full text-left p-4 rounded-xl border-2 transition-all font-medium ";
+              let buttonClass = "w-full text-left p-4 rounded-sm transition-all font-medium ";
               if (selectedAnswer === null) {
-                buttonClass += "border-gray-200 hover:border-purple-400 hover:bg-purple-50 text-gray-800 cursor-pointer";
+                buttonClass += "border-3 border-border-pixel bg-card text-text-primary hover:border-pixel-cyan hover:bg-card-hover cursor-pointer";
               } else if (index === question.correctAnswer) {
-                buttonClass += "border-green-500 bg-green-50 text-green-800";
+                buttonClass += "border-3 border-roblox-green bg-roblox-green/10 text-roblox-green correct-pulse";
               } else if (index === selectedAnswer) {
-                buttonClass += "border-red-500 bg-red-50 text-red-800";
+                buttonClass += "border-3 border-roblox-red bg-roblox-red/10 text-roblox-red shake";
               } else {
-                buttonClass += "border-gray-200 text-gray-400";
+                buttonClass += "border-3 border-border-pixel text-text-secondary/40 bg-card";
               }
 
               return (
@@ -183,7 +187,7 @@ export default function QuizPage() {
                   className={buttonClass}
                 >
                   <span className="inline-flex items-center gap-3">
-                    <span className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-sm font-bold flex-shrink-0">
+                    <span className="w-8 h-8 rounded-sm bg-[#0d1b2a] border-2 border-border-pixel flex items-center justify-center text-sm font-bold flex-shrink-0">
                       {String.fromCharCode(65 + index)}
                     </span>
                     {option}
@@ -201,16 +205,16 @@ export default function QuizPage() {
   if (state === "finished") {
     return (
       <div className="max-w-2xl mx-auto px-4 py-8 fade-in">
-        <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
+        <div className="pixel-card p-8 text-center">
           <div className="text-6xl mb-4">🏆</div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Quiz Complete!</h2>
-          <p className="text-gray-500 mb-6">Watch a short ad to see your results and claim your coins!</p>
+          <h2 className="font-pixel text-sm text-white mb-2">Quiz Complete!</h2>
+          <p className="text-text-secondary mb-6">Watch a short ad to see your results and claim your coins!</p>
           <RewardedAd
             adName="quiz-results"
             buttonText="See Results & Claim Coins"
             adLabel="Watch Ad"
             onReward={handleResultsReward}
-            className="bg-green-500 text-white hover:bg-green-600 w-full text-lg"
+            className="bg-roblox-green text-white hover:brightness-110 w-full text-lg"
           />
         </div>
       </div>
@@ -220,45 +224,45 @@ export default function QuizPage() {
   // RESULTS state
   return (
     <div className="max-w-2xl mx-auto px-4 py-8 fade-in">
-      <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
+      <div className="pixel-card p-8 text-center">
         <div className="text-6xl mb-4">
           {score === quiz.questions.length ? "🌟" : score >= quiz.questions.length / 2 ? "🎉" : "💪"}
         </div>
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">
+        <h2 className="font-pixel text-xs md:text-sm text-white mb-2">
           {score === quiz.questions.length
             ? "Perfect Score!"
             : score >= quiz.questions.length / 2
             ? "Great Job!"
             : "Keep Trying!"}
         </h2>
-        <p className="text-5xl font-extrabold text-purple-600 mb-2">
+        <p className="text-4xl font-extrabold text-pixel-cyan mb-2">
           {score} / {quiz.questions.length}
         </p>
-        <p className="text-gray-500 mb-4">correct answers</p>
+        <p className="text-text-secondary mb-4">correct answers</p>
 
         {coinsAwarded && (
-          <div className="bg-yellow-50 border-2 border-yellow-300 rounded-xl p-4 mb-6 fade-in">
+          <div className="bg-coin-gold/10 border-2 border-coin-gold rounded-sm p-4 mb-6 slide-up">
             <span className="text-2xl coin-bounce inline-block">🪙</span>
-            <p className="text-yellow-700 font-bold text-lg">+4 coins earned!</p>
+            <p className="text-coin-gold font-bold text-lg">+4 coins earned!</p>
           </div>
         )}
 
         {!user && (
-          <div className="bg-purple-50 border-2 border-purple-300 rounded-xl p-5 mb-6 fade-in">
-            <p className="text-purple-800 font-bold text-lg mb-1">🪙 You earned 4 coins!</p>
-            <p className="text-purple-600 text-sm mb-3">
+          <div className="bg-pixel-blue/10 border-2 border-pixel-blue rounded-sm p-5 mb-6 fade-in">
+            <p className="text-coin-gold font-bold text-lg mb-1">🪙 You earned 4 coins!</p>
+            <p className="text-pixel-blue text-sm mb-3">
               Sign up now to save your coins and cash out for Robux gift cards at 400 coins!
             </p>
             <div className="flex justify-center gap-3">
               <button
                 onClick={() => router.push("/signup")}
-                className="bg-purple-600 text-white font-bold py-2.5 px-6 rounded-xl hover:bg-purple-700 transition-colors"
+                className="bg-roblox-green text-white font-bold py-2.5 px-6 rounded-sm pixel-btn"
               >
                 Sign Up & Save Coins
               </button>
               <button
                 onClick={() => router.push("/login")}
-                className="bg-white text-purple-600 font-bold py-2.5 px-6 rounded-xl border-2 border-purple-300 hover:bg-purple-50 transition-colors"
+                className="bg-transparent text-pixel-cyan font-bold py-2.5 px-6 rounded-sm border-2 border-pixel-cyan pixel-btn"
               >
                 Log In
               </button>
@@ -267,21 +271,21 @@ export default function QuizPage() {
         )}
 
         {alreadyCompleted && !coinsAwarded && (
-          <div className="bg-gray-50 rounded-xl p-4 mb-6 text-gray-500 text-sm">
+          <div className="bg-card rounded-sm p-4 mb-6 text-text-secondary text-sm border-2 border-border-pixel">
             No additional coins — you&apos;ve completed this quiz before.
           </div>
         )}
 
         {/* Answer review */}
         <div className="text-left mt-6 space-y-3">
-          <h3 className="font-bold text-gray-700">Answer Review:</h3>
+          <h3 className="font-bold text-text-secondary">Answer Review:</h3>
           {quiz.questions.map((q, i) => (
-            <div key={i} className={`p-3 rounded-lg text-sm ${answers[i] === q.correctAnswer ? "bg-green-50" : "bg-red-50"}`}>
-              <p className="font-medium text-gray-800">{i + 1}. {q.question}</p>
-              <p className={answers[i] === q.correctAnswer ? "text-green-600" : "text-red-600"}>
+            <div key={i} className={`p-3 text-sm ${answers[i] === q.correctAnswer ? "bg-roblox-green/10 rounded-sm" : "bg-roblox-red/10 rounded-sm"}`}>
+              <p className="font-medium text-white">{i + 1}. {q.question}</p>
+              <p className={answers[i] === q.correctAnswer ? "text-roblox-green" : "text-roblox-red"}>
                 Your answer: {q.options[answers[i]]}
                 {answers[i] !== q.correctAnswer && (
-                  <span className="text-green-600 ml-2">| Correct: {q.options[q.correctAnswer]}</span>
+                  <span className="text-roblox-green ml-2">| Correct: {q.options[q.correctAnswer]}</span>
                 )}
               </p>
             </div>
@@ -291,14 +295,14 @@ export default function QuizPage() {
         <div className="flex gap-3 mt-8">
           <button
             onClick={() => router.push("/")}
-            className="flex-1 bg-purple-600 text-white font-bold py-3 rounded-xl hover:bg-purple-700"
+            className="flex-1 pixel-btn bg-pixel-blue text-white font-bold py-3 rounded-sm"
           >
             More Quizzes
           </button>
           {(user?.coins ?? 0) >= 400 && (
             <button
               onClick={() => router.push("/cashout")}
-              className="flex-1 bg-green-500 text-white font-bold py-3 rounded-xl hover:bg-green-600"
+              className="flex-1 pixel-btn bg-roblox-green text-white font-bold py-3 rounded-sm"
             >
               Cash Out!
             </button>

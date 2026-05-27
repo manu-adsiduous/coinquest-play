@@ -1,23 +1,24 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Press_Start_2P, Nunito } from "next/font/google";
 import Script from "next/script";
 import AuthProvider from "@/components/AuthProvider";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const pressStart = Press_Start_2P({
+  weight: "400",
+  variable: "--font-press-start",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const nunito = Nunito({
+  variable: "--font-nunito",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "CoinQuest Play - Earn Robux by Playing Quizzes!",
+  title: "CoinQuest Play - Earn FREE Robux by Playing Quizzes!",
   description:
     "Complete fun quizzes, earn coins, and cash out for Robux gift cards! 100+ quizzes on Roblox, Minecraft, Anime, and more.",
   keywords: ["robux", "free robux", "quiz", "roblox", "coins", "gift cards"],
@@ -33,7 +34,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${pressStart.variable} ${nunito.variable} h-full`}
     >
       <head>
         {/* Google AdSense H5 Games Ad Placement API */}

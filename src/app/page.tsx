@@ -58,24 +58,24 @@ export default function Home() {
     <div className="max-w-7xl mx-auto px-4 py-8">
       {/* Hero */}
       <div className="text-center mb-10">
-        <h1 className="text-4xl md:text-5xl font-extrabold mb-4">
-          <span className="text-purple-600">Complete quizzes.</span>{" "}
-          <span className="text-green-500">Get FREE Robux.</span>
+        <h1 className="font-pixel text-lg md:text-xl font-extrabold mb-4">
+          <span className="text-roblox-green">Complete quizzes.</span>{" "}
+          <span className="text-coin-gold">Get FREE Robux.</span>
         </h1>
-        <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+        <p className="text-text-secondary text-lg max-w-2xl mx-auto">
           Each quiz allows you to collect coins that you can cash out as Robux!
         </p>
         {!user && (
           <div className="mt-6 flex justify-center gap-4">
             <a
               href="/signup"
-              className="bg-purple-600 text-white font-bold px-8 py-3 rounded-full hover:bg-purple-700 transition-colors text-lg"
+              className="pixel-btn bg-roblox-green text-white font-bold px-8 py-3 rounded-sm text-lg"
             >
               Start Playing
             </a>
             <a
               href="/login"
-              className="bg-white text-purple-600 font-bold px-8 py-3 rounded-full border-2 border-purple-600 hover:bg-purple-50 transition-colors text-lg"
+              className="pixel-btn border-3 border-pixel-cyan bg-transparent text-pixel-cyan font-bold px-8 py-3 rounded-sm text-lg"
             >
               Log In
             </a>
@@ -90,7 +90,7 @@ export default function Home() {
           placeholder="Search quizzes..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full max-w-md mx-auto block bg-white border-2 border-purple-200 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none transition-colors text-gray-900"
+          className="pixel-input w-full max-w-md mx-auto block px-4 py-3 transition-colors"
         />
       </div>
 
@@ -100,10 +100,10 @@ export default function Home() {
           <button
             key={cat}
             onClick={() => setActiveCategory(cat)}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+            className={`px-4 py-2 rounded-sm text-sm font-medium transition-all ${
               activeCategory === cat
-                ? "bg-purple-600 text-white shadow-md"
-                : "bg-white text-gray-600 hover:bg-purple-100"
+                ? "bg-pixel-cyan text-[#0d1b2a] border-2 border-black pixel-btn shadow-md"
+                : "bg-card text-text-secondary border-2 border-border-pixel hover:border-pixel-cyan hover:text-pixel-cyan"
             }`}
           >
             {cat}
@@ -123,7 +123,7 @@ export default function Home() {
       </div>
 
       {filteredQuizzes.length === 0 && (
-        <div className="text-center py-16 text-gray-500">
+        <div className="text-center py-16 text-text-secondary">
           <p className="text-4xl mb-4">🔍</p>
           <p className="text-lg">No quizzes found. Try a different search or category!</p>
         </div>

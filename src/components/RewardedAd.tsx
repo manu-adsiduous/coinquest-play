@@ -63,7 +63,6 @@ export default function RewardedAd({
         type: "reward",
         name: adName,
         beforeReward: (showAdFn) => {
-          // User already clicked the button, so show the ad immediately
           showAdFn();
         },
         beforeAd: () => {},
@@ -77,7 +76,6 @@ export default function RewardedAd({
           onDismiss?.();
         },
         adBreakDone: (placementInfo) => {
-          // If no ad was available, grant reward anyway (dev/low-fill)
           if (placementInfo.breakStatus === "notReady" || placementInfo.breakStatus === "frequencyCapped") {
             setLoading(false);
             onReward();
@@ -85,7 +83,6 @@ export default function RewardedAd({
         },
       });
     } else {
-      // Development fallback: no ads available, grant reward
       setTimeout(() => {
         setLoading(false);
         onReward();
@@ -97,7 +94,7 @@ export default function RewardedAd({
     <button
       onClick={showAd}
       disabled={disabled || loading}
-      className={`flex items-center justify-center gap-2 font-bold py-3 px-6 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+      className={`flex items-center justify-center gap-2 font-bold py-3 px-6 rounded-sm pixel-btn transition-all duration-100 disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
     >
       {loading ? (
         <>
@@ -105,13 +102,13 @@ export default function RewardedAd({
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
           </svg>
-          Loading Ad...
+          Loading...
         </>
       ) : (
         <span className="flex flex-col items-center gap-1">
           <span className="text-base">{buttonText}</span>
           {adLabel && (
-            <span className="flex items-center gap-1 text-xs opacity-75 font-normal">
+            <span className="flex items-center gap-1 text-[10px] opacity-75 font-normal">
               <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
               </svg>
