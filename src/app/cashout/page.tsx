@@ -2,8 +2,14 @@
 
 import { useAuth } from "@/components/AuthProvider";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { trackEvent } from "@/lib/analytics";
+
+interface RedeemedCard {
+  code: string;
+  amount: number;
+  redeemed_at: string;
+}
 
 export default function CashoutPage() {
   const { user, loading, refreshProfile } = useAuth();
@@ -11,10 +17,21 @@ export default function CashoutPage() {
   const [redeeming, setRedeeming] = useState(false);
   const [giftCardCode, setGiftCardCode] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [redeemedCards, setRedeemedCards] = useState<RedeemedCard[]>([]);
+
+  const fetchHistory = useCallback(async () => {
+    const res = await fetch("/api/gift-cards/history");
+    const data = await res.json();
+    if (data.cards) setRedeemedCards(data.cards);
+  }, []);
 
   useEffect(() => {
     if (!loading && !user) router.push("/login");
   }, [user, loading, router]);
+
+  useEffect(() => {
+    if (user) fetchHistory();
+  }, [user, fetchHistory]);
 
   const handleCashout = async () => {
     if (!user || user.coins < 400) return;
@@ -32,6 +49,7 @@ export default function CashoutPage() {
       }
 
       await refreshProfile();
+      await fetchHistory();
       setGiftCardCode(data.code);
       trackEvent("cashout", { coins_spent: 400 });
     } catch {
@@ -65,10 +83,10 @@ export default function CashoutPage() {
               Copy this code and redeem it on the Roblox website to get your Robux!
             </p>
             <button
-              onClick={() => router.push("/")}
+              onClick={() => { setGiftCardCode(null); }}
               className="bg-pixel-blue text-white font-bold py-3 px-8 rounded-sm pixel-btn"
             >
-              Keep Playing
+              Back to Cash Out
             </button>
           </div>
         ) : (
@@ -122,6 +140,35 @@ export default function CashoutPage() {
               </>
             )}
           </>
+        )}
+      </div>
+
+      {/* Redeemed gift cards history */}
+      <div className="pixel-card p-6 mt-6">
+        <h2 className="font-pixel text-[10px] text-white mb-4 text-center">Your Robux Gift Cards</h2>
+        {redeemedCards.length > 0 ? (
+          <div className="space-y-3">
+            {redeemedCards.map((card, i) => (
+              <div key={i} className="bg-[#0d1b2a] border-2 border-border-pixel rounded-sm p-4">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="flex items-center gap-2">
+                    <span className="pixel-coin" style={{ width: 14, height: 14, fontSize: 6 }}>C</span>
+                    <span className="text-coin-gold font-bold text-sm">{card.amount} Robux</span>
+                  </span>
+                  <span className="text-text-secondary text-xs">
+                    {new Date(card.redeemed_at).toLocaleDateString()}
+                  </span>
+                </div>
+                <div className="text-roblox-green font-pixel text-[10px] select-all mt-1">
+                  {card.code}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-text-secondary text-sm text-center">
+            No gift cards redeemed yet. Earn 400 coins to get your first Robux gift card!
+          </p>
         )}
       </div>
     </div>
