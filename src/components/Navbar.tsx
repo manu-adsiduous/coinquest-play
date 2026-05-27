@@ -8,6 +8,8 @@ import { useState } from "react";
 export default function Navbar() {
   const { user, signOut, loading, sessionCoins } = useAuth();
   const router = useRouter();
+  const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "manu@adsiduous.com").split(",").map(e => e.trim());
+  const isAdmin = user && adminEmails.includes(user.email);
   const [menuOpen, setMenuOpen] = useState(false);
   const [showCoinPopup, setShowCoinPopup] = useState(false);
 
@@ -45,6 +47,11 @@ export default function Navbar() {
                     <Link href="/cashout" className="hover:text-pixel-cyan transition-colors font-bold text-sm">
                       Cash Out
                     </Link>
+                    {isAdmin && (
+                      <Link href="/console" className="hover:text-pixel-magenta transition-colors font-bold text-sm text-pixel-magenta">
+                        Console
+                      </Link>
+                    )}
                   </>
                 ) : (
                   <>
@@ -183,6 +190,11 @@ export default function Navbar() {
                 <Link href="/cashout" className="hover:text-pixel-cyan font-bold text-sm" onClick={() => setMenuOpen(false)}>
                   Cash Out
                 </Link>
+                {isAdmin && (
+                  <Link href="/console" className="hover:text-pixel-magenta text-pixel-magenta font-bold text-sm" onClick={() => setMenuOpen(false)}>
+                    Console
+                  </Link>
+                )}
                 <button onClick={() => { signOut(); setMenuOpen(false); }} className="text-left hover:text-roblox-red font-bold text-sm">
                   Sign Out
                 </button>
