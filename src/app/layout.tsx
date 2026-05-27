@@ -48,7 +48,7 @@ export default function RootLayout({
             __html: `
               window.adsbygoogle = window.adsbygoogle || [];
               window.adBreak = window.adConfig = function(o) { window.adsbygoogle.push(o); };
-              window.adConfig({ preloadAdBreaks: 'on' });
+              window.adConfig({ preloadAdBreaks: 'on', sound: 'on' });
             `,
           }}
         />

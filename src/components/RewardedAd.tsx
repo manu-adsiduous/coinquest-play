@@ -66,14 +66,16 @@ export default function RewardedAd({
       type: "next",
       name: `${adName}-interstitial`,
       beforeAd: () => {},
-      afterAd: () => {},
+      afterAd: () => {
+        window.adConfig({ sound: "on" });
+      },
       adBreakDone: (placementInfo) => {
         setLoading(false);
+        window.adConfig({ sound: "on" });
         if (placementInfo.breakStatus === "viewed") {
           setNoAd(false);
           onReward();
         } else {
-          // No interstitial available either
           setNoAd(true);
         }
       },
@@ -86,6 +88,9 @@ export default function RewardedAd({
     setNoAd(false);
 
     if (typeof window !== "undefined" && window.adBreak) {
+      // Mute ad sound to prevent "Video will play with sound" alert
+      window.adConfig({ sound: "off" });
+
       window.adBreak({
         type: "reward",
         name: adName,
@@ -93,7 +98,10 @@ export default function RewardedAd({
           showAdFn();
         },
         beforeAd: () => {},
-        afterAd: () => {},
+        afterAd: () => {
+          // Restore sound so our AudioContext stays alive
+          window.adConfig({ sound: "on" });
+        },
         adViewed: () => {
           setLoading(false);
           setNoAd(false);
@@ -101,6 +109,7 @@ export default function RewardedAd({
         },
         adDismissed: () => {
           setLoading(false);
+          window.adConfig({ sound: "on" });
           onDismiss?.();
         },
         adBreakDone: (placementInfo) => {
