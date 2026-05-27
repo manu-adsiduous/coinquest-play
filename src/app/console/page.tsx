@@ -46,6 +46,8 @@ export default function ConsolePage() {
   const router = useRouter();
   const [authorized, setAuthorized] = useState(false);
   const [range, setRange] = useState("all");
+  const [customFrom, setCustomFrom] = useState("");
+  const [customTo, setCustomTo] = useState("");
   const [stats, setStats] = useState<Stats | null>(null);
   const [users, setUsers] = useState<UserRow[]>([]);
   const [giftCards, setGiftCards] = useState<GiftCard[]>([]);
@@ -67,13 +69,18 @@ export default function ConsolePage() {
   }, [user, loading, router]);
 
   const fetchStats = useCallback(async () => {
-    const res = await fetch(`/api/console/stats?range=${range}`);
+    let url = `/api/console/stats?range=${range}`;
+    if (range === "custom" && customFrom) {
+      url += `&from=${customFrom}`;
+      if (customTo) url += `&to=${customTo}`;
+    }
+    const res = await fetch(url);
     if (res.ok) {
       setStats(await res.json());
     } else if (res.status === 403) {
       setAuthorized(false);
     }
-  }, [range]);
+  }, [range, customFrom, customTo]);
 
   const fetchUsers = useCallback(async () => {
     const res = await fetch("/api/console/users");
@@ -160,7 +167,37 @@ export default function ConsolePage() {
             {dr.label}
           </button>
         ))}
+        <button
+          onClick={() => setRange("custom")}
+          className={`px-4 py-2 rounded-sm text-sm font-bold border-2 transition-all ${
+            range === "custom"
+              ? "bg-pixel-cyan text-[#0d1b2a] border-black pixel-btn"
+              : "bg-card text-text-secondary border-border-pixel hover:border-pixel-cyan hover:text-pixel-cyan"
+          }`}
+        >
+          Custom
+        </button>
       </div>
+
+      {/* Custom date range */}
+      {range === "custom" && (
+        <div className="flex flex-wrap items-center gap-3 mb-6">
+          <label className="text-text-secondary text-sm">From</label>
+          <input
+            type="date"
+            value={customFrom}
+            onChange={(e) => setCustomFrom(e.target.value)}
+            className="pixel-input px-3 py-2 text-sm"
+          />
+          <label className="text-text-secondary text-sm">To</label>
+          <input
+            type="date"
+            value={customTo}
+            onChange={(e) => setCustomTo(e.target.value)}
+            className="pixel-input px-3 py-2 text-sm"
+          />
+        </div>
+      )}
 
       {/* Stats cards */}
       {stats && (

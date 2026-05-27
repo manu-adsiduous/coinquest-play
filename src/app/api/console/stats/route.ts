@@ -27,6 +27,18 @@ export async function GET(req: Request) {
     const start = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
     const end = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
     dateFilter = `${start}|${end}`;
+  } else if (range === "custom") {
+    const from = searchParams.get("from");
+    const to = searchParams.get("to");
+    if (from) {
+      const start = new Date(from).toISOString();
+      if (to) {
+        const end = new Date(new Date(to).getTime() + 86400000).toISOString(); // include end date
+        dateFilter = `${start}|${end}`;
+      } else {
+        dateFilter = start;
+      }
+    }
   }
 
   try {
