@@ -47,8 +47,15 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               window.adsbygoogle = window.adsbygoogle || [];
-              const adBreak = adConfig = function(o) { adsbygoogle.push(o); };
-              adConfig({ preloadAdBreaks: 'on', sound: 'on' });
+              const adBreak = adConfig = function(o) {
+                console.log('[AdPlacement]', o.type || 'adConfig', o);
+                adsbygoogle.push(o);
+              };
+              adConfig({
+                preloadAdBreaks: 'on',
+                sound: 'on',
+                onReady: function() { console.log('[AdPlacement] API ready'); }
+              });
             `,
           }}
         />
