@@ -56,26 +56,21 @@ export default function RewardedAd({
 
   const showInterstitialFallback = useCallback(() => {
     if (typeof window === "undefined" || !window.adBreak) {
-      console.log("[RewardedAd] No adBreak API — granting reward directly");
       setLoading(false);
       onReward();
       return;
     }
 
-    console.log("[RewardedAd] Falling back to interstitial");
     window.adBreak({
       type: "next",
       name: `${adName}-interstitial`,
-      beforeAd: () => { console.log("[RewardedAd] interstitial beforeAd"); },
-      afterAd: () => { console.log("[RewardedAd] interstitial afterAd"); },
+      beforeAd: () => {},
+      afterAd: () => {},
       adBreakDone: (placementInfo) => {
-        console.log("[RewardedAd] interstitial adBreakDone:", JSON.stringify(placementInfo));
         setLoading(false);
-        // Grant reward regardless — interstitial was either shown or unavailable
         if (placementInfo.breakStatus === "viewed" || placementInfo.breakStatus === "notReady" || placementInfo.breakStatus === "frequencyCapped") {
           onReward();
         } else {
-          // dismissed — still grant since this is a fallback
           onReward();
         }
       },
@@ -87,36 +82,29 @@ export default function RewardedAd({
     setLoading(true);
 
     if (typeof window !== "undefined" && window.adBreak) {
-      console.log("[RewardedAd] Requesting rewarded ad:", adName);
       window.adBreak({
         type: "reward",
         name: adName,
         beforeReward: (showAdFn) => {
-          console.log("[RewardedAd] beforeReward called, showing ad");
           showAdFn();
         },
-        beforeAd: () => { console.log("[RewardedAd] beforeAd"); },
-        afterAd: () => { console.log("[RewardedAd] afterAd"); },
+        beforeAd: () => {},
+        afterAd: () => {},
         adViewed: () => {
-          console.log("[RewardedAd] adViewed — granting reward");
           setLoading(false);
           onReward();
         },
         adDismissed: () => {
-          console.log("[RewardedAd] adDismissed");
           setLoading(false);
           onDismiss?.();
         },
         adBreakDone: (placementInfo) => {
-          console.log("[RewardedAd] adBreakDone:", JSON.stringify(placementInfo));
-          // Rewarded ad not available — fall back to interstitial
           if (placementInfo.breakStatus === "notReady" || placementInfo.breakStatus === "frequencyCapped") {
             showInterstitialFallback();
           }
         },
       });
     } else {
-      // Development fallback
       setTimeout(() => {
         setLoading(false);
         onReward();
