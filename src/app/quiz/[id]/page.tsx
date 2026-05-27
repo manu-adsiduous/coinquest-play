@@ -40,6 +40,12 @@ export default function QuizPage() {
     checkCompletion();
   }, [user, quiz]);
 
+  useEffect(() => {
+    if (quiz) {
+      trackEvent("quiz_viewed", { quiz_id: quiz.id, quiz_title: quiz.title, category: quiz.category });
+    }
+  }, [quiz]);
+
   const handleUnlockReward = useCallback(() => {
     playUnlock();
     setState("playing");

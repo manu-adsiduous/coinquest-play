@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect } from "react";
 import { useAuth } from "@/components/AuthProvider";
+import { trackEvent } from "@/lib/analytics";
 
 const steps = [
   {
@@ -52,6 +54,10 @@ const coinTiers = [
 
 export default function HowItWorksPage() {
   const { user } = useAuth();
+
+  useEffect(() => {
+    trackEvent("pageview", { page: "how_it_works" });
+  }, []);
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8 fade-in">
