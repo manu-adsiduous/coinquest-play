@@ -366,17 +366,6 @@ export default function QuizPage() {
           </div>
         )}
 
-        {/* Score breakdown */}
-        <div className="bg-card border-2 border-border-pixel rounded-sm p-4 mb-4 text-sm text-left">
-          <p className="text-text-secondary mb-2 font-bold">Coin Rewards:</p>
-          <div className="grid grid-cols-2 gap-1 text-xs">
-            <span className={score >= 8 ? "text-coin-gold font-bold" : "text-text-secondary"}>8-10 correct = 4 coins</span>
-            <span className={score >= 6 && score < 8 ? "text-coin-gold font-bold" : "text-text-secondary"}>6-7 correct = 3 coins</span>
-            <span className={score >= 4 && score < 6 ? "text-coin-gold font-bold" : "text-text-secondary"}>4-5 correct = 2 coins</span>
-            <span className={score >= 1 && score < 4 ? "text-coin-gold font-bold" : "text-text-secondary"}>1-3 correct = 1 coin</span>
-          </div>
-        </div>
-
         {/* Answer review */}
         <div className="text-left mt-6 space-y-3">
           <h3 className="font-bold text-text-secondary">Answer Review:</h3>
