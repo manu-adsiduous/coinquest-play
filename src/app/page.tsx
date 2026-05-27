@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { usePathname } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 import QuizCard from "@/components/QuizCard";
 import { allQuizzes } from "@/data/quizzes";
@@ -29,29 +30,40 @@ interface QuizCompletionInfo {
 
 export default function Home() {
   const { user } = useAuth();
+  const pathname = usePathname();
   const [activeCategory, setActiveCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [completions, setCompletions] = useState<QuizCompletionInfo[]>([]);
+  const [fetchCounter, setFetchCounter] = useState(0);
 
-  useEffect(() => {
+  const fetchCompletions = useCallback(async () => {
     if (!user) {
       setCompletions([]);
       return;
     }
-    const fetchCompletions = async () => {
-      const res = await fetch("/api/quiz/completions");
-      const data = await res.json();
-      if (data.completions) {
-        setCompletions(data.completions);
-      }
-    };
-    fetchCompletions();
+    const res = await fetch("/api/quiz/completions");
+    const data = await res.json();
+    if (data.completions) {
+      setCompletions(data.completions);
+    }
+  }, [user]);
 
-    // Refetch when user returns to this tab (e.g. after completing a quiz)
-    const handleFocus = () => fetchCompletions();
+  // Fetch on mount, user change, coin change, and route change
+  useEffect(() => {
+    fetchCompletions();
+  }, [fetchCompletions, user?.coins, pathname, fetchCounter]);
+
+  // Refetch when tab regains focus
+  useEffect(() => {
+    const handleFocus = () => setFetchCounter((c) => c + 1);
     window.addEventListener("focus", handleFocus);
-    return () => window.removeEventListener("focus", handleFocus);
-  }, [user, user?.coins]);
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") handleFocus();
+    });
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, []);
 
   const completionMap = useMemo(() => {
     const map = new Map<string, number>();
