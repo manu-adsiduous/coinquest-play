@@ -222,7 +222,7 @@ export default function QuizPage() {
           <p className="text-text-secondary mb-6">Watch a short ad to see your results and claim your coins!</p>
           <RewardedAd
             adName="quiz-results"
-            buttonText={<span className="flex items-center gap-2"><span className="pixel-coin">C</span> Claim Your Coins For This Quiz</span>}
+            buttonText={<span className="flex items-center gap-2"><span className="pixel-coin">C</span> Claim Your Coins</span>}
             adLabel="Watch Ad"
             onReward={handleResultsReward}
             className="bg-roblox-green text-white hover:brightness-110 w-full text-lg"
