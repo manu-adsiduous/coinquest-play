@@ -5,7 +5,7 @@ import { headers } from "next/headers";
 
 export async function POST(req: Request) {
   try {
-    const { event, properties } = await req.json();
+    const { event, properties, eventId } = await req.json();
     if (!event) {
       return NextResponse.json({ error: "Event name required" }, { status: 400 });
     }
@@ -21,6 +21,7 @@ export async function POST(req: Request) {
       properties || {},
       userAgent,
       ip,
+      eventId,
     );
 
     return NextResponse.json({ ok: true });
