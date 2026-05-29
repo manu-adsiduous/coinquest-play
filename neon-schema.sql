@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS users (
   username TEXT NOT NULL,
   password_hash TEXT NOT NULL,
   coins INTEGER DEFAULT 0,
+  avatar TEXT DEFAULT '👤',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 

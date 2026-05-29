@@ -18,6 +18,7 @@ export interface UserProfile {
   email: string;
   username: string;
   coins: number;
+  avatar: string;
   created_at: string;
 }
 

@@ -14,7 +14,7 @@ const avatarEmojis = [
 ];
 
 export default function ProfilePage() {
-  const { user, loading } = useAuth();
+  const { user, loading, refreshProfile } = useAuth();
   const router = useRouter();
   const [completedCount, setCompletedCount] = useState(0);
   const [avatar, setAvatar] = useState("👤");
@@ -27,8 +27,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (!user) return;
-    const saved = localStorage.getItem(`cq_avatar_${user.id}`);
-    if (saved) setAvatar(saved);
+    if (user.avatar) setAvatar(user.avatar);
   }, [user]);
 
   useEffect(() => {
@@ -41,10 +40,15 @@ export default function ProfilePage() {
     fetchStats();
   }, [user]);
 
-  const pickAvatar = (emoji: string) => {
+  const pickAvatar = async (emoji: string) => {
     setAvatar(emoji);
-    if (user) localStorage.setItem(`cq_avatar_${user.id}`, emoji);
     setShowEmojiPicker(false);
+    await fetch("/api/auth/avatar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ avatar: emoji }),
+    });
+    await refreshProfile();
   };
 
   if (loading || !user) {

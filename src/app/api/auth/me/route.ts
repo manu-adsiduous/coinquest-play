@@ -11,7 +11,7 @@ export async function GET() {
 
     const sql = getDb();
     const result = await sql`
-      SELECT id, email, username, coins, created_at
+      SELECT id, email, username, coins, avatar, created_at
       FROM users WHERE id = ${session.userId}
     `;
 
