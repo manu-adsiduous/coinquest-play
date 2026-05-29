@@ -40,7 +40,14 @@ export function trackEvent(eventName: string, params?: Record<string, unknown>) 
   // Meta Pixel (client-side)
   if (window.fbq) {
     const metaEvent = META_EVENT_MAP[eventName] || eventName;
-    const metaParams = { ...params, eventID: eventId };
+    const metaParams: Record<string, unknown> = { ...params };
+
+    // Add value/currency for standard events that require it
+    const eventsNeedingValue = ["CompleteRegistration", "ViewContent", "Purchase"];
+    if (eventsNeedingValue.includes(metaEvent)) {
+      metaParams.value = metaParams.value ?? 0;
+      metaParams.currency = metaParams.currency ?? "USD";
+    }
 
     const standardEvents = ["PageView", "CompleteRegistration", "ViewContent", "Purchase"];
     if (standardEvents.includes(metaEvent)) {

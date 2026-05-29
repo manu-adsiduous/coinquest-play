@@ -3,7 +3,6 @@ import { headers } from "next/headers";
 import bcrypt from "bcryptjs";
 import { getDb } from "@/lib/db";
 import { signToken, sessionCookieOptions } from "@/lib/auth";
-import { trackServerEvent } from "@/lib/track";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -54,7 +53,6 @@ export async function POST(req: Request) {
 
     const user = result[0];
     const token = signToken({ userId: user.id, email: user.email });
-    trackServerEvent("sign_up", user.id, { method: "email" }, h.get("user-agent") || undefined, ip, undefined, { email });
 
     const response = NextResponse.json({
       user: { id: user.id, email: user.email, username: user.username, coins: user.coins },

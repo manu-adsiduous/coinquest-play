@@ -81,12 +81,20 @@ async function sendToMeta(
   if (browserData?.fbc) userData.fbc = browserData.fbc;
   if (browserData?.fbp) userData.fbp = browserData.fbp;
 
+  // Add value/currency for standard events that require it
+  const customData: Record<string, unknown> = { ...properties };
+  const eventsNeedingValue = ["CompleteRegistration", "ViewContent", "Purchase"];
+  if (eventsNeedingValue.includes(metaEventName)) {
+    customData.value = customData.value ?? 0;
+    customData.currency = customData.currency ?? "USD";
+  }
+
   const eventData: Record<string, unknown> = {
     event_name: metaEventName,
     event_time: Math.floor(Date.now() / 1000),
     action_source: "website",
     user_data: userData,
-    custom_data: properties,
+    custom_data: customData,
   };
 
   if (eventId) eventData.event_id = eventId;
