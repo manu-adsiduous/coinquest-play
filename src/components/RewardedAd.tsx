@@ -10,7 +10,7 @@ declare global {
 }
 
 interface AdBreakConfig {
-  type: "reward" | "next";
+  type: "reward";
   name: string;
   beforeAd?: () => void;
   afterAd?: () => void;
@@ -55,36 +55,12 @@ export default function RewardedAd({
   const [loading, setLoading] = useState(false);
   const [noAd, setNoAd] = useState(false);
 
-  const showInterstitialFallback = useCallback(() => {
-    if (typeof window === "undefined" || !window.adBreak) {
-      setLoading(false);
-      setNoAd(true);
-      return;
-    }
-
-    window.adBreak({
-      type: "next",
-      name: `${adName}-interstitial`,
-      beforeAd: () => {},
-      afterAd: () => {},
-      adBreakDone: (placementInfo) => {
-        setLoading(false);
-        if (placementInfo.breakStatus === "viewed") {
-          setNoAd(false);
-          onReward();
-        } else {
-          setNoAd(true);
-        }
-      },
-    });
-  }, [adName, onReward]);
-
   const showAd = useCallback(() => {
     if (disabled || loading) return;
     setLoading(true);
     setNoAd(false);
 
-    // Safety timeout — never stay stuck on "Loading..." for more than 15 seconds
+    // Safety timeout — never stay stuck on "Loading..."
     const timeout = setTimeout(() => {
       setLoading(false);
       setNoAd(true);
@@ -111,16 +87,14 @@ export default function RewardedAd({
           onDismiss?.();
         },
         adBreakDone: (placementInfo) => {
+          // adViewed/adDismissed already handled these
           if (placementInfo.breakStatus === "viewed" || placementInfo.breakStatus === "dismissed") {
             return;
           }
+          // No rewarded ad available — show retry message
           clearTimeout(timeout);
-          if (placementInfo.breakStatus === "notReady" || placementInfo.breakStatus === "frequencyCapped") {
-            showInterstitialFallback();
-          } else {
-            setLoading(false);
-            setNoAd(true);
-          }
+          setLoading(false);
+          setNoAd(true);
         },
       });
     } else {
@@ -128,7 +102,7 @@ export default function RewardedAd({
       setLoading(false);
       setNoAd(true);
     }
-  }, [adName, onReward, onDismiss, disabled, loading, showInterstitialFallback]);
+  }, [adName, onReward, onDismiss, disabled, loading]);
 
   return (
     <div className="flex flex-col items-center gap-3 w-full">
