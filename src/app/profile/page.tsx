@@ -3,7 +3,6 @@
 import { useAuth } from "@/components/AuthProvider";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { trackEvent } from "@/lib/analytics";
 import { allQuizzes } from "@/data/quizzes";
 
 const avatarEmojis = [
@@ -22,7 +21,6 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (!loading && !user) router.push("/login");
-    if (user) trackEvent("pageview", { page: "profile" });
   }, [user, loading, router]);
 
   useEffect(() => {

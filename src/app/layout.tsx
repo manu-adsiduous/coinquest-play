@@ -4,6 +4,7 @@ import Script from "next/script";
 import AuthProvider from "@/components/AuthProvider";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import PageViewTracker from "@/components/PageViewTracker";
 import "./globals.css";
 
 const pressStart = Press_Start_2P({
@@ -89,6 +90,7 @@ export default function RootLayout({
           </Script>
         )}
         <AuthProvider>
+          <PageViewTracker />
           <Navbar />
           <main className="flex-1">{children}</main>
           <Footer />

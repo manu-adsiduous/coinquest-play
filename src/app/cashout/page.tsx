@@ -27,7 +27,6 @@ export default function CashoutPage() {
 
   useEffect(() => {
     if (!loading && !user) router.push("/login");
-    if (user) trackEvent("pageview", { page: "cashout" });
   }, [user, loading, router]);
 
   useEffect(() => {

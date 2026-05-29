@@ -6,7 +6,6 @@ import { useAuth } from "@/components/AuthProvider";
 import QuizCard from "@/components/QuizCard";
 import { allQuizzes } from "@/data/quizzes";
 import { MAX_COINS_PER_QUIZ } from "@/lib/coins";
-import { trackEvent } from "@/lib/analytics";
 
 const categories = [
   "All",
@@ -36,10 +35,6 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [completions, setCompletions] = useState<QuizCompletionInfo[]>([]);
   const [fetchCounter, setFetchCounter] = useState(0);
-
-  useEffect(() => {
-    trackEvent("pageview", { page: "home" });
-  }, []);
 
   const fetchCompletions = useCallback(async () => {
     if (!user) {
