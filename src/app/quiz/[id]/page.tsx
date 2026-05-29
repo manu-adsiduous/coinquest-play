@@ -27,6 +27,18 @@ export default function QuizPage() {
   const [coinsAwarded, setCoinsAwarded] = useState(0);
   const [coinsEarnedThisAttempt, setCoinsEarnedThisAttempt] = useState(0);
 
+  // Preload ads on quiz pages — we know ads are needed here
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.adConfig) {
+      window.adConfig({ preloadAdBreaks: "on" });
+    }
+    return () => {
+      if (typeof window !== "undefined" && window.adConfig) {
+        window.adConfig({ preloadAdBreaks: "off" });
+      }
+    };
+  }, []);
+
   useEffect(() => {
     if (!user || !quiz) return;
     const checkCompletion = async () => {
