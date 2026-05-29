@@ -84,6 +84,12 @@ export default function RewardedAd({
     setLoading(true);
     setNoAd(false);
 
+    // Safety timeout — never stay stuck on "Loading..." for more than 15 seconds
+    const timeout = setTimeout(() => {
+      setLoading(false);
+      setNoAd(true);
+    }, 15000);
+
     if (typeof window !== "undefined" && window.adBreak) {
       window.adBreak({
         type: "reward",
@@ -94,22 +100,31 @@ export default function RewardedAd({
         beforeAd: () => {},
         afterAd: () => {},
         adViewed: () => {
+          clearTimeout(timeout);
           setLoading(false);
           setNoAd(false);
           onReward();
         },
         adDismissed: () => {
+          clearTimeout(timeout);
           setLoading(false);
           onDismiss?.();
         },
         adBreakDone: (placementInfo) => {
+          if (placementInfo.breakStatus === "viewed" || placementInfo.breakStatus === "dismissed") {
+            return;
+          }
+          clearTimeout(timeout);
           if (placementInfo.breakStatus === "notReady" || placementInfo.breakStatus === "frequencyCapped") {
             showInterstitialFallback();
+          } else {
+            setLoading(false);
+            setNoAd(true);
           }
         },
       });
     } else {
-      // No ad API loaded at all
+      clearTimeout(timeout);
       setLoading(false);
       setNoAd(true);
     }
