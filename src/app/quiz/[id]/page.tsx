@@ -201,6 +201,32 @@ export default function QuizPage() {
             onReward={handleUnlockReward}
             className="bg-roblox-green text-white hover:brightness-110 w-full text-lg"
           />
+
+          {/* Explainer + testimonials */}
+          <div className="mt-6 text-left">
+            <div className="bg-card border-2 border-border-pixel rounded-sm p-4 mb-4">
+              <p className="text-text-secondary text-sm">
+                <span className="text-coin-gold font-bold">How it works:</span> Watch a short ad to unlock this quiz, then answer 10 questions. The more you get right, the more coins you earn. Collect enough coins and cash them out for real Robux gift cards!
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <div className="bg-card/50 rounded-sm p-3 border border-border-pixel/50">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-lg">😎</span>
+                  <span className="text-pixel-cyan font-bold text-xs">xDarkSlayer99</span>
+                </div>
+                <p className="text-text-secondary text-xs italic">&quot;I didn&apos;t think it was real but I actually got my Robux gift card code. Took me a few days of playing quizzes but totally worth it!&quot;</p>
+              </div>
+              <div className="bg-card/50 rounded-sm p-3 border border-border-pixel/50">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-lg">🦊</span>
+                  <span className="text-pixel-cyan font-bold text-xs">PixelFox_Gamer</span>
+                </div>
+                <p className="text-text-secondary text-xs italic">&quot;The quizzes are actually fun lol. I keep coming back to get more coins. Already cashed out once 🔥&quot;</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
