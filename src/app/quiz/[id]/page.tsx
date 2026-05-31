@@ -8,6 +8,20 @@ import { trackEvent } from "@/lib/analytics";
 import { scoreToCoins, MAX_COINS_PER_QUIZ } from "@/lib/coins";
 import RewardedAd from "@/components/RewardedAd";
 import { playCorrect, playWrong, playUnlock, playComplete, playCoins } from "@/lib/sounds";
+import { useMemo } from "react";
+
+const testimonials = [
+  { emoji: "😎", name: "xDarkSlayer99", text: "I didn't think it was real but I actually got my Robux gift card code. Took me a few days of playing quizzes but totally worth it!" },
+  { emoji: "🦊", name: "PixelFox_Gamer", text: "The quizzes are actually fun lol. I keep coming back to get more coins. Already cashed out once 🔥" },
+  { emoji: "🐸", name: "FroggyPlays", text: "My friend told me about this and I thought it was fake. But nah it actually works, got my Robux code in like a week." },
+  { emoji: "👾", name: "NoobMaster2015", text: "I play this during lunch break at school. Already saved up enough for a cashout. The anime quizzes are fire btw." },
+  { emoji: "🎮", name: "RblxQueen_Sarah", text: "Easiest way to get Robux without asking my parents lol. Just watch a quick ad and answer some questions." },
+  { emoji: "🤖", name: "TurboBot_X", text: "Been using this for 2 weeks now. Cashed out twice already. The Roblox and Minecraft quizzes are my favorite." },
+  { emoji: "🐱", name: "KittyKat_Plays", text: "I was scared it was a scam but my friend showed me her gift card code and it worked!! Now I'm hooked 😂" },
+  { emoji: "⚡", name: "ZapGamer_YT", text: "Way better than those fake Robux generators. This one actually gives you real gift card codes. 10/10 would recommend." },
+  { emoji: "🌟", name: "StardustGirl", text: "The questions are fun and not too hard. I get most of them right and the coins add up pretty fast!" },
+  { emoji: "🔥", name: "BlazeMC_Pro", text: "Bro I literally cashed out yesterday and redeemed it on Roblox right away. This site is legit no cap." },
+];
 
 type QuizState = "locked" | "playing" | "finished" | "results";
 
@@ -17,6 +31,12 @@ export default function QuizPage() {
   const { user, refreshProfile, addSessionCoins } = useAuth();
 
   const quiz = allQuizzes.find((q) => q.id === params.id);
+
+  const randomTestimonials = useMemo(() => {
+    const shuffled = [...testimonials].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, 2);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [state, setState] = useState<QuizState>("locked");
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -211,20 +231,15 @@ export default function QuizPage() {
             </div>
 
             <div className="space-y-3">
-              <div className="bg-card/50 rounded-sm p-3 border border-border-pixel/50">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-lg">😎</span>
-                  <span className="text-pixel-cyan font-bold text-xs">xDarkSlayer99</span>
+              {randomTestimonials.map((t) => (
+                <div key={t.name} className="bg-card/50 rounded-sm p-3 border border-border-pixel/50">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-lg">{t.emoji}</span>
+                    <span className="text-pixel-cyan font-bold text-xs">{t.name}</span>
+                  </div>
+                  <p className="text-text-secondary text-xs italic">&quot;{t.text}&quot;</p>
                 </div>
-                <p className="text-text-secondary text-xs italic">&quot;I didn&apos;t think it was real but I actually got my Robux gift card code. Took me a few days of playing quizzes but totally worth it!&quot;</p>
-              </div>
-              <div className="bg-card/50 rounded-sm p-3 border border-border-pixel/50">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-lg">🦊</span>
-                  <span className="text-pixel-cyan font-bold text-xs">PixelFox_Gamer</span>
-                </div>
-                <p className="text-text-secondary text-xs italic">&quot;The quizzes are actually fun lol. I keep coming back to get more coins. Already cashed out once 🔥&quot;</p>
-              </div>
+              ))}
             </div>
           </div>
         </div>
