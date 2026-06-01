@@ -441,7 +441,56 @@ export default function QuizPage() {
           ))}
         </div>
 
-        <div className="flex flex-col gap-3 mt-8">
+        {/* Share button */}
+        <div className="mt-6">
+          <button
+            onClick={async () => {
+              const params = new URLSearchParams({
+                title: quiz.title,
+                emoji: quiz.emoji,
+                score: String(score),
+                total: String(quiz.questions.length),
+                coins: String(coinsEarnedThisAttempt),
+                username: user?.username || "Player",
+                avatar: user?.avatar || "👤",
+                category: quiz.category,
+              });
+              const imageUrl = `/api/share?${params.toString()}`;
+
+              try {
+                const res = await fetch(imageUrl);
+                const blob = await res.blob();
+                const file = new File([blob], `coinquest-${quiz.id}-score.png`, { type: "image/png" });
+
+                if (navigator.share && navigator.canShare?.({ files: [file] })) {
+                  await navigator.share({
+                    title: `I scored ${score}/${quiz.questions.length} on ${quiz.title}!`,
+                    text: `Can you beat my score? Play at play.coinquestgames.com`,
+                    files: [file],
+                  });
+                } else {
+                  // Fallback: download the image
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `coinquest-${quiz.id}-score.png`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                }
+                trackEvent("share_score", { quiz_id: quiz.id, score });
+              } catch {
+                // User cancelled share or error
+              }
+            }}
+            className="w-full pixel-btn bg-pixel-magenta text-white font-bold py-3 rounded-sm text-lg"
+          >
+            <span className="flex items-center justify-center gap-2">
+              📸 Share Your Score
+            </span>
+          </button>
+        </div>
+
+        <div className="flex flex-col gap-3 mt-4">
           {/* Retake button - show if user can still earn more coins */}
           {canRetakeForMore && (
             <button

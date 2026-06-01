@@ -7,7 +7,7 @@ import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 const ALLOWED_EVENTS = new Set([
   "pageview", "quiz_viewed", "quiz_unlocked", "quiz_completed",
-  "coins_earned", "sign_up", "login", "cashout",
+  "coins_earned", "sign_up", "login", "cashout", "share_score",
 ]);
 
 export async function POST(req: Request) {
