@@ -357,7 +357,7 @@ export default function QuizPage() {
               {coinsStillAvailable > 0 && ` — get 8+ correct to earn more!`}
             </p>
             <p className="text-pixel-blue text-sm mb-3">
-              Sign up now to save your coins and cash out for Robux gift cards at 400 coins!
+              Sign up now to save your coins and cash out for Robux gift cards at 200 coins!
             </p>
             <div className="flex justify-center gap-3">
               <button
@@ -475,7 +475,7 @@ export default function QuizPage() {
             >
               More Quizzes
             </button>
-            {(user?.coins ?? 0) >= 400 && (
+            {(user?.coins ?? 0) >= 200 && (
               <button
                 onClick={() => router.push("/cashout")}
                 className="flex-1 pixel-btn bg-roblox-green text-white font-bold py-3 rounded-sm"

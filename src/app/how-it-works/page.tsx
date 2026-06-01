@@ -38,7 +38,7 @@ const steps = [
     number: 6,
     emoji: "💰",
     title: "Cash Out",
-    description: "Once you reach 400 coins, head to the Cash Out page to get a Robux gift card code instantly!",
+    description: "Once you reach 200 coins, head to the Cash Out page to get a Robux gift card code instantly!",
   },
 ];
 
@@ -106,15 +106,15 @@ export default function HowItWorksPage() {
         <div className="flex items-center justify-center gap-3 mb-4">
           <div className="bg-card border-2 border-coin-gold rounded-sm px-4 py-2">
             <span className="pixel-coin inline-block mr-1">C</span>
-            <span className="text-coin-gold font-bold">400</span>
+            <span className="text-coin-gold font-bold">200</span>
           </div>
           <span className="text-text-secondary text-xl">=</span>
           <div className="bg-card border-2 border-roblox-green rounded-sm px-4 py-2">
-            <span className="text-roblox-green font-bold">400 Robux</span>
+            <span className="text-roblox-green font-bold">200 Robux</span>
           </div>
         </div>
         <p className="text-text-secondary text-sm mb-2">
-          Once you hit 400 coins, go to the <Link href="/cashout" className="text-pixel-cyan hover:underline">Cash Out</Link> page.
+          Once you hit 200 coins, go to the <Link href="/cashout" className="text-pixel-cyan hover:underline">Cash Out</Link> page.
         </p>
         <p className="text-text-secondary text-sm">
           You&apos;ll receive a Robux gift card code that you can redeem on the Roblox website.

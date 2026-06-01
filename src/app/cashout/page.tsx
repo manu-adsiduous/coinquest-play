@@ -34,7 +34,7 @@ export default function CashoutPage() {
   }, [user, fetchHistory]);
 
   const handleCashout = async () => {
-    if (!user || user.coins < 400) return;
+    if (!user || user.coins < 200) return;
     setRedeeming(true);
     setError("");
 
@@ -51,7 +51,7 @@ export default function CashoutPage() {
       await refreshProfile();
       await fetchHistory();
       setGiftCardCode(data.code);
-      trackEvent("cashout", { coins_spent: 400 });
+      trackEvent("cashout", { coins_spent: 200 });
     } catch {
       setError("Something went wrong. Please try again.");
     }
@@ -96,14 +96,14 @@ export default function CashoutPage() {
                 <span className="pixel-coin coin-bounce !w-10 !h-10 text-base">C</span>
               </div>
               <div className="text-3xl font-bold text-coin-gold">{user.coins} coins</div>
-              <div className="text-text-secondary text-sm mt-1">400 coins needed</div>
+              <div className="text-text-secondary text-sm mt-1">200 coins needed</div>
             </div>
 
-            {user.coins >= 400 ? (
+            {user.coins >= 200 ? (
               <>
                 <div className="bg-roblox-green/10 border-2 border-roblox-green rounded-sm p-4 mb-6">
                   <p className="text-roblox-green font-medium">
-                    You have enough coins! Cash out now to get a 400 Robux gift card code.
+                    You have enough coins! Cash out now to get a 200 Robux gift card code.
                   </p>
                 </div>
                 {error && (
@@ -116,7 +116,7 @@ export default function CashoutPage() {
                   disabled={redeeming}
                   className="w-full bg-roblox-green text-white font-bold py-4 rounded-sm pixel-btn text-lg disabled:opacity-50"
                 >
-                  {redeeming ? "Redeeming..." : "Cash Out 400 Coins for Robux"}
+                  {redeeming ? "Redeeming..." : "Cash Out 200 Coins for Robux"}
                 </button>
               </>
             ) : (
@@ -124,11 +124,11 @@ export default function CashoutPage() {
                 <div className="pixel-progress pixel-progress-gold mb-3">
                   <div
                     className="pixel-progress-fill"
-                    style={{ width: `${(user.coins / 400) * 100}%` }}
+                    style={{ width: `${(user.coins / 200) * 100}%` }}
                   />
                 </div>
                 <p className="text-text-secondary mb-6">
-                  You need <span className="font-bold text-pixel-cyan">{400 - user.coins} more coins</span> to cash out.
+                  You need <span className="font-bold text-pixel-cyan">{200 - user.coins} more coins</span> to cash out.
                   Keep playing quizzes!
                 </p>
                 <button
@@ -167,7 +167,7 @@ export default function CashoutPage() {
           </div>
         ) : (
           <p className="text-text-secondary text-sm text-center">
-            No gift cards redeemed yet. Earn 400 coins to get your first Robux gift card!
+            No gift cards redeemed yet. Earn 200 coins to get your first Robux gift card!
           </p>
         )}
       </div>

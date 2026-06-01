@@ -84,7 +84,7 @@ export default function Navbar() {
                         You&apos;ve earned {sessionCoins} coins!
                       </p>
                       <p className="text-text-secondary text-xs mb-3">
-                        Sign up to save your progress and cash out for Robux at 400 coins.
+                        Sign up to save your progress and cash out for Robux at 200 coins.
                       </p>
                       <div className="flex gap-2">
                         <Link

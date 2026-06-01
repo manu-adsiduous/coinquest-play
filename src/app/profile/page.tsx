@@ -57,8 +57,8 @@ export default function ProfilePage() {
     );
   }
 
-  const progressToGoal = Math.min((user.coins / 400) * 100, 100);
-  const coinsNeeded = Math.max(400 - user.coins, 0);
+  const progressToGoal = Math.min((user.coins / 200) * 100, 100);
+  const coinsNeeded = Math.max(200 - user.coins, 0);
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8 fade-in">
@@ -128,7 +128,7 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {user.coins >= 400 && (
+        {user.coins >= 200 && (
           <button
             onClick={() => router.push("/cashout")}
             className="w-full bg-roblox-green text-white font-bold py-4 rounded-sm pixel-btn pixel-glow text-lg"

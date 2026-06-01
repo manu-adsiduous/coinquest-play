@@ -34,12 +34,12 @@ export default function PreviewCashoutPage() {
                 <span className="pixel-coin coin-bounce !w-10 !h-10 text-base">C</span>
               </div>
               <div className="text-3xl font-bold text-coin-gold">432 coins</div>
-              <div className="text-text-secondary text-sm mt-1">400 coins needed</div>
+              <div className="text-text-secondary text-sm mt-1">200 coins needed</div>
             </div>
 
             <div className="bg-roblox-green/10 border-2 border-roblox-green rounded-sm p-4 mb-6">
               <p className="text-roblox-green font-medium">
-                You have enough coins! Cash out now to get a 400 Robux gift card code.
+                You have enough coins! Cash out now to get a 200 Robux gift card code.
               </p>
             </div>
 
@@ -47,7 +47,7 @@ export default function PreviewCashoutPage() {
               className="w-full bg-roblox-green text-white font-bold py-4 rounded-sm pixel-btn text-lg"
               onClick={() => setView("redeemed")}
             >
-              Cash Out 400 Coins for Robux
+              Cash Out 200 Coins for Robux
             </button>
           </>
         ) : (

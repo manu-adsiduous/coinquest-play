@@ -18,10 +18,10 @@ export async function POST() {
 
     const sql = getDb();
 
-    // Atomic: deduct coins only if user has >= 400
+    // Atomic: deduct coins only if user has >= 200
     const deductResult = await sql`
-      UPDATE users SET coins = coins - 400
-      WHERE id = ${session.userId} AND coins >= 400
+      UPDATE users SET coins = coins - 200
+      WHERE id = ${session.userId} AND coins >= 200
       RETURNING id
     `;
 
@@ -45,7 +45,7 @@ export async function POST() {
     if (cardResult.length === 0) {
       // Refund coins — no cards available
       await sql`
-        UPDATE users SET coins = coins + 400
+        UPDATE users SET coins = coins + 200
         WHERE id = ${session.userId}
       `;
       return NextResponse.json(
