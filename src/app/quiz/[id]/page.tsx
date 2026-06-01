@@ -46,6 +46,7 @@ export default function QuizPage() {
   const [previousCoinsEarned, setPreviousCoinsEarned] = useState(0);
   const [coinsAwarded, setCoinsAwarded] = useState(0);
   const [shareBonusClaimed, setShareBonusClaimed] = useState(false);
+  const [shareLoading, setShareLoading] = useState(false);
   const [coinsEarnedThisAttempt, setCoinsEarnedThisAttempt] = useState(0);
 
   // Preload ads on quiz pages — we know ads are needed here
@@ -445,8 +446,9 @@ export default function QuizPage() {
         {/* Share button */}
         <div className="mt-6">
           <button
-            disabled={shareBonusClaimed}
+            disabled={shareBonusClaimed || shareLoading}
             onClick={async () => {
+              setShareLoading(true);
               const params = new URLSearchParams({
                 title: quiz.title,
                 emoji: quiz.emoji,
@@ -501,6 +503,8 @@ export default function QuizPage() {
                 trackEvent("share_score", { quiz_id: quiz.id, score });
               } catch {
                 // User cancelled share
+              } finally {
+                setShareLoading(false);
               }
             }}
             className={`w-full pixel-btn bg-pixel-magenta text-white font-bold py-3 rounded-sm text-lg ${shareBonusClaimed ? "opacity-60" : ""}`}
@@ -508,6 +512,14 @@ export default function QuizPage() {
             {shareBonusClaimed ? (
               <span className="flex items-center justify-center gap-2">
                 ✅ Shared — +2 bonus coins claimed!
+              </span>
+            ) : shareLoading ? (
+              <span className="flex items-center justify-center gap-2">
+                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                Generating...
               </span>
             ) : (
               <span className="flex flex-col items-center gap-1">
