@@ -463,22 +463,43 @@ export default function QuizPage() {
 
               try {
                 const res = await fetch(imageUrl);
+                if (!res.ok) throw new Error("Image generation failed");
                 const blob = await res.blob();
-                const file = new File([blob], `coinquest-${quiz.id}-score.png`, { type: "image/png" });
 
-                if (navigator.share && navigator.canShare?.({ files: [file] })) {
-                  await navigator.share({
-                    title: `I scored ${score}/${quiz.questions.length} on ${quiz.title}!`,
-                    text: `Can you beat my score? Play at play.coinquestgames.com`,
-                    files: [file],
-                  });
-                } else {
+                let shared = false;
+
+                // Try native share with file
+                if (navigator.share) {
+                  try {
+                    const file = new File([blob], `coinquest-${quiz.id}-score.png`, { type: "image/png" });
+                    if (navigator.canShare?.({ files: [file] })) {
+                      await navigator.share({
+                        title: `I scored ${score}/${quiz.questions.length} on ${quiz.title}!`,
+                        text: `Can you beat my score? Play at play.coinquestgames.com`,
+                        files: [file],
+                      });
+                      shared = true;
+                    }
+                  } catch (shareErr) {
+                    // Share cancelled or failed — try fallback
+                    if ((shareErr as Error)?.name === "AbortError") {
+                      // User cancelled — don't fallback
+                      shared = true;
+                    }
+                  }
+                }
+
+                // Fallback: download or open in new tab
+                if (!shared) {
                   const url = URL.createObjectURL(blob);
+                  // Try download
                   const a = document.createElement("a");
                   a.href = url;
                   a.download = `coinquest-${quiz.id}-score.png`;
+                  document.body.appendChild(a);
                   a.click();
-                  URL.revokeObjectURL(url);
+                  document.body.removeChild(a);
+                  setTimeout(() => URL.revokeObjectURL(url), 5000);
                 }
 
                 // Award share bonus
