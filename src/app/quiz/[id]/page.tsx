@@ -7,7 +7,6 @@ import { allQuizzes } from "@/data/quizzes";
 import { trackEvent } from "@/lib/analytics";
 import { scoreToCoins, MAX_COINS_PER_QUIZ } from "@/lib/coins";
 import RewardedAd from "@/components/RewardedAd";
-import ShareSheet from "@/components/ShareSheet";
 import { playCorrect, playWrong, playUnlock, playComplete, playCoins } from "@/lib/sounds";
 import { useMemo } from "react";
 
@@ -46,8 +45,6 @@ export default function QuizPage() {
   const [score, setScore] = useState(0);
   const [previousCoinsEarned, setPreviousCoinsEarned] = useState(0);
   const [coinsAwarded, setCoinsAwarded] = useState(0);
-  const [shareBonusClaimed, setShareBonusClaimed] = useState(false);
-  const [shareLoading, setShareLoading] = useState(false);
   const [coinsEarnedThisAttempt, setCoinsEarnedThisAttempt] = useState(0);
 
   // Preload ads on quiz pages — we know ads are needed here
@@ -444,73 +441,7 @@ export default function QuizPage() {
           ))}
         </div>
 
-        {/* Share button */}
-        <div className="mt-6">
-          <button
-            disabled={shareBonusClaimed}
-            onClick={() => setShareLoading(true)}
-            className={`w-full pixel-btn bg-pixel-magenta text-white font-bold py-3 rounded-sm text-lg ${shareBonusClaimed ? "opacity-60" : ""}`}
-          >
-            {shareBonusClaimed ? (
-              <span className="flex items-center justify-center gap-2">
-                ✅ Shared — +2 bonus coins claimed!
-              </span>
-            ) : (
-              <span className="flex flex-col items-center gap-1">
-                <span className="text-base">📸 Share Your Score</span>
-                <span className="flex items-center gap-1 text-[10px] opacity-75 font-normal">
-                  <span className="pixel-coin" style={{ width: 12, height: 12, fontSize: 5 }}>C</span>
-                  +2 Bonus Coins
-                </span>
-              </span>
-            )}
-          </button>
-        </div>
-
-        {/* Share sheet modal */}
-        {shareLoading && (
-          <ShareSheet
-            imageUrl={`/api/share?${new URLSearchParams({
-              title: quiz.title,
-              emoji: quiz.emoji,
-              score: String(score),
-              total: String(quiz.questions.length),
-              coins: String(coinsEarnedThisAttempt),
-              username: user?.username || "Player",
-              avatar: user?.avatar || "👤",
-              category: quiz.category,
-            }).toString()}`}
-            quizTitle={quiz.title}
-            score={score}
-            total={quiz.questions.length}
-            bonusClaimed={shareBonusClaimed}
-            onClose={() => setShareLoading(false)}
-            onBonusClaimed={async () => {
-              if (shareBonusClaimed) return;
-              try {
-                if (user) {
-                  const bonusRes = await fetch("/api/quiz/share-bonus", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ quizId: quiz.id }),
-                  });
-                  if (bonusRes.ok) {
-                    setShareBonusClaimed(true);
-                    playCoins();
-                    await refreshProfile();
-                  }
-                } else {
-                  addSessionCoins(2);
-                  setShareBonusClaimed(true);
-                  playCoins();
-                }
-              } catch {}
-              trackEvent("share_score", { quiz_id: quiz.id, score });
-            }}
-          />
-        )}
-
-        <div className="flex flex-col gap-3 mt-4">
+        <div className="flex flex-col gap-3 mt-8">
           {/* Retake button - show if user can still earn more coins */}
           {canRetakeForMore && (
             <button
