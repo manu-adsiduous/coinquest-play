@@ -7,6 +7,7 @@ import { allQuizzes } from "@/data/quizzes";
 import { trackEvent } from "@/lib/analytics";
 import { scoreToCoins, MAX_COINS_PER_QUIZ } from "@/lib/coins";
 import RewardedAd from "@/components/RewardedAd";
+import ShareSheet from "@/components/ShareSheet";
 import { playCorrect, playWrong, playUnlock, playComplete, playCoins } from "@/lib/sounds";
 import { useMemo } from "react";
 
@@ -446,108 +447,13 @@ export default function QuizPage() {
         {/* Share button */}
         <div className="mt-6">
           <button
-            disabled={shareBonusClaimed || shareLoading}
-            onClick={async () => {
-              const awardShareBonus = async () => {
-                if (shareBonusClaimed) return;
-                try {
-                  if (user) {
-                    const bonusRes = await fetch("/api/quiz/share-bonus", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ quizId: quiz.id }),
-                    });
-                    if (bonusRes.ok) {
-                      setShareBonusClaimed(true);
-                      playCoins();
-                      await refreshProfile();
-                    }
-                  } else {
-                    addSessionCoins(2);
-                    setShareBonusClaimed(true);
-                    playCoins();
-                  }
-                } catch {
-                  // Bonus award failed silently
-                }
-              };
-
-              setShareLoading(true);
-              const params = new URLSearchParams({
-                title: quiz.title,
-                emoji: quiz.emoji,
-                score: String(score),
-                total: String(quiz.questions.length),
-                coins: String(coinsEarnedThisAttempt),
-                username: user?.username || "Player",
-                avatar: user?.avatar || "👤",
-                category: quiz.category,
-              });
-              const imageUrl = `/api/share?${params.toString()}`;
-
-              try {
-                const res = await fetch(imageUrl);
-                if (!res.ok) throw new Error("Image generation failed");
-                const blob = await res.blob();
-
-                let shared = false;
-
-                // Try native share with file
-                if (navigator.share) {
-                  try {
-                    const file = new File([blob], `coinquest-${quiz.id}-score.png`, { type: "image/png" });
-                    if (navigator.canShare?.({ files: [file] })) {
-                      await navigator.share({
-                        title: `I scored ${score}/${quiz.questions.length} on ${quiz.title}!`,
-                        text: `Can you beat my score? Play at play.coinquestgames.com`,
-                        files: [file],
-                      });
-                      shared = true;
-                    }
-                  } catch (shareErr) {
-                    // Share cancelled or failed — try fallback
-                    if ((shareErr as Error)?.name === "AbortError") {
-                      // User cancelled — don't fallback
-                      shared = true;
-                    }
-                  }
-                }
-
-                // Fallback: download or open in new tab
-                if (!shared) {
-                  const url = URL.createObjectURL(blob);
-                  // Try download
-                  const a = document.createElement("a");
-                  a.href = url;
-                  a.download = `coinquest-${quiz.id}-score.png`;
-                  document.body.appendChild(a);
-                  a.click();
-                  document.body.removeChild(a);
-                  setTimeout(() => URL.revokeObjectURL(url), 5000);
-                }
-
-                // Award share bonus
-                await awardShareBonus();
-                trackEvent("share_score", { quiz_id: quiz.id, score });
-              } catch {
-                // Image fetch failed — still try to award if they got this far
-              } finally {
-                setShareLoading(false);
-              }
-            }}
+            disabled={shareBonusClaimed}
+            onClick={() => setShareLoading(true)}
             className={`w-full pixel-btn bg-pixel-magenta text-white font-bold py-3 rounded-sm text-lg ${shareBonusClaimed ? "opacity-60" : ""}`}
           >
             {shareBonusClaimed ? (
               <span className="flex items-center justify-center gap-2">
                 ✅ Shared — +2 bonus coins claimed!
-              </span>
-            ) : shareLoading ? (
-              <span className="flex items-center justify-center gap-2">
-                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-                Generating...
               </span>
             ) : (
               <span className="flex flex-col items-center gap-1">
@@ -560,6 +466,49 @@ export default function QuizPage() {
             )}
           </button>
         </div>
+
+        {/* Share sheet modal */}
+        {shareLoading && (
+          <ShareSheet
+            imageUrl={`/api/share?${new URLSearchParams({
+              title: quiz.title,
+              emoji: quiz.emoji,
+              score: String(score),
+              total: String(quiz.questions.length),
+              coins: String(coinsEarnedThisAttempt),
+              username: user?.username || "Player",
+              avatar: user?.avatar || "👤",
+              category: quiz.category,
+            }).toString()}`}
+            quizTitle={quiz.title}
+            score={score}
+            total={quiz.questions.length}
+            bonusClaimed={shareBonusClaimed}
+            onClose={() => setShareLoading(false)}
+            onBonusClaimed={async () => {
+              if (shareBonusClaimed) return;
+              try {
+                if (user) {
+                  const bonusRes = await fetch("/api/quiz/share-bonus", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ quizId: quiz.id }),
+                  });
+                  if (bonusRes.ok) {
+                    setShareBonusClaimed(true);
+                    playCoins();
+                    await refreshProfile();
+                  }
+                } else {
+                  addSessionCoins(2);
+                  setShareBonusClaimed(true);
+                  playCoins();
+                }
+              } catch {}
+              trackEvent("share_score", { quiz_id: quiz.id, score });
+            }}
+          />
+        )}
 
         <div className="flex flex-col gap-3 mt-4">
           {/* Retake button - show if user can still earn more coins */}
