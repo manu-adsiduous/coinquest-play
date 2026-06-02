@@ -22,11 +22,12 @@ export async function POST(req: Request) {
     }
 
     const sql = getDb();
+    const userId = Number(session.userId);
 
     // Check if the user has completed this quiz (must have played it)
     const completion = await sql`
       SELECT id FROM quiz_completions
-      WHERE user_id = ${session.userId} AND quiz_id = ${quizId}
+      WHERE user_id = ${userId} AND quiz_id = ${quizId}
     `;
     if (completion.length === 0) {
       return NextResponse.json({ error: "Quiz not completed" }, { status: 400 });
@@ -35,7 +36,7 @@ export async function POST(req: Request) {
     // Award 2 bonus coins
     const result = await sql`
       UPDATE users SET coins = coins + 2
-      WHERE id = ${session.userId}
+      WHERE id = ${userId}
       RETURNING coins
     `;
 

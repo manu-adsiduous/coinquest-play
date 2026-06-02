@@ -448,6 +448,30 @@ export default function QuizPage() {
           <button
             disabled={shareBonusClaimed || shareLoading}
             onClick={async () => {
+              const awardShareBonus = async () => {
+                if (shareBonusClaimed) return;
+                try {
+                  if (user) {
+                    const bonusRes = await fetch("/api/quiz/share-bonus", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ quizId: quiz.id }),
+                    });
+                    if (bonusRes.ok) {
+                      setShareBonusClaimed(true);
+                      playCoins();
+                      await refreshProfile();
+                    }
+                  } else {
+                    addSessionCoins(2);
+                    setShareBonusClaimed(true);
+                    playCoins();
+                  }
+                } catch {
+                  // Bonus award failed silently
+                }
+              };
+
               setShareLoading(true);
               const params = new URLSearchParams({
                 title: quiz.title,
@@ -503,27 +527,10 @@ export default function QuizPage() {
                 }
 
                 // Award share bonus
-                if (!shareBonusClaimed) {
-                  if (user) {
-                    const bonusRes = await fetch("/api/quiz/share-bonus", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ quizId: quiz.id }),
-                    });
-                    if (bonusRes.ok) {
-                      setShareBonusClaimed(true);
-                      playCoins();
-                      await refreshProfile();
-                    }
-                  } else {
-                    addSessionCoins(2);
-                    setShareBonusClaimed(true);
-                    playCoins();
-                  }
-                }
+                await awardShareBonus();
                 trackEvent("share_score", { quiz_id: quiz.id, score });
               } catch {
-                // User cancelled share
+                // Image fetch failed — still try to award if they got this far
               } finally {
                 setShareLoading(false);
               }
