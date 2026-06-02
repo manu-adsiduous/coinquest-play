@@ -83,7 +83,7 @@ export default function QuizPage() {
 
   useEffect(() => {
     if (quiz) {
-      trackEvent("quiz_viewed", { quiz_id: quiz.id, quiz_title: quiz.title, category: quiz.category });
+      trackEvent("quiz_viewed", { quiz_id: quiz.id, quiz_title: quiz.title, category: quiz.category, coins_available: MAX_COINS_PER_QUIZ - previousCoinsEarned, content_name: quiz.title, content_category: quiz.category });
     }
   }, [quiz]);
 

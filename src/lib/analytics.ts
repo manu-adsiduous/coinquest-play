@@ -42,11 +42,16 @@ export function trackEvent(eventName: string, params?: Record<string, unknown>) 
     const metaEvent = META_EVENT_MAP[eventName] || eventName;
     const metaParams: Record<string, unknown> = { ...params };
 
-    // Add value/currency for standard events that require it
-    const eventsNeedingValue = ["CompleteRegistration", "ViewContent", "Purchase"];
-    if (eventsNeedingValue.includes(metaEvent)) {
-      metaParams.value = metaParams.value ?? 0;
-      metaParams.currency = metaParams.currency ?? "USD";
+    // Add value/currency for all Meta events
+    if (!metaParams.currency) metaParams.currency = "USD";
+    if (metaParams.value === undefined) {
+      // Set meaningful values per event type
+      if (metaEvent === "Purchase") metaParams.value = 2;
+      else if (metaEvent === "CompleteRegistration") metaParams.value = 0.5;
+      else if (metaEvent === "ViewContent") metaParams.value = metaParams.coins_available ?? 0.1;
+      else if (metaEvent === "QuizCompleted") metaParams.value = metaParams.coins_earned ?? 0;
+      else if (metaEvent === "QuizUnlocked") metaParams.value = 0.2;
+      else metaParams.value = 0;
     }
 
     const standardEvents = ["PageView", "CompleteRegistration", "ViewContent", "Purchase"];

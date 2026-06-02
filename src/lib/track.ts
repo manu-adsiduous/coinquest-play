@@ -81,12 +81,16 @@ async function sendToMeta(
   if (browserData?.fbc) userData.fbc = browserData.fbc;
   if (browserData?.fbp) userData.fbp = browserData.fbp;
 
-  // Add value/currency for standard events that require it
+  // Add value/currency for all Meta events
   const customData: Record<string, unknown> = { ...properties };
-  const eventsNeedingValue = ["CompleteRegistration", "ViewContent", "Purchase"];
-  if (eventsNeedingValue.includes(metaEventName)) {
-    customData.value = customData.value ?? 0;
-    customData.currency = customData.currency ?? "USD";
+  if (!customData.currency) customData.currency = "USD";
+  if (customData.value === undefined) {
+    if (metaEventName === "Purchase") customData.value = 2;
+    else if (metaEventName === "CompleteRegistration") customData.value = 0.5;
+    else if (metaEventName === "ViewContent") customData.value = customData.coins_available ?? 0.1;
+    else if (metaEventName === "QuizCompleted") customData.value = customData.coins_earned ?? 0;
+    else if (metaEventName === "QuizUnlocked") customData.value = 0.2;
+    else customData.value = 0;
   }
 
   const eventData: Record<string, unknown> = {
