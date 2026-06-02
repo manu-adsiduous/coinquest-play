@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface ShareSheetProps {
   imageUrl: string;
@@ -22,26 +22,38 @@ export default function ShareSheet({
   bonusClaimed,
 }: ShareSheetProps) {
   const [imageBlob, setImageBlob] = useState<Blob | null>(null);
+  const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const shareText = `I scored ${score}/${total} on ${quizTitle}! Can you beat me? 🎮\nplay.coinquestgames.com`;
 
-  const handleImageLoad = async () => {
-    try {
-      const res = await fetch(imageUrl);
-      if (!res.ok) throw new Error();
-      const blob = await res.blob();
-      setImageBlob(blob);
-    } catch {
-      setError(true);
-    }
-    setLoading(false);
-  };
+  useEffect(() => {
+    let cancelled = false;
+    const loadImage = async () => {
+      try {
+        const res = await fetch(imageUrl);
+        if (!res.ok) throw new Error();
+        const blob = await res.blob();
+        if (cancelled) return;
+        setImageBlob(blob);
+        setImageSrc(URL.createObjectURL(blob));
+      } catch {
+        if (!cancelled) setError(true);
+      }
+      if (!cancelled) setLoading(false);
+    };
+    loadImage();
+    return () => {
+      cancelled = true;
+    };
+  }, [imageUrl]);
 
-  // Load image on mount
-  if (loading && !imageBlob && !error) {
-    handleImageLoad();
-  }
+  // Cleanup blob URL on unmount
+  useEffect(() => {
+    return () => {
+      if (imageSrc) URL.revokeObjectURL(imageSrc);
+    };
+  }, [imageSrc]);
 
   const downloadImage = () => {
     if (!imageBlob) return;
@@ -62,7 +74,6 @@ export default function ShareSheet({
   };
 
   const shareToInstagram = () => {
-    // Instagram doesn't support web sharing — download image and prompt
     downloadImage();
   };
 
@@ -128,13 +139,13 @@ export default function ShareSheet({
             <div className="h-48 flex items-center justify-center text-roblox-red text-sm">
               Failed to generate image
             </div>
-          ) : (
+          ) : imageSrc ? (
             <img
-              src={imageUrl}
+              src={imageSrc}
               alt="Score card"
               className="h-48 w-auto object-contain"
             />
-          )}
+          ) : null}
         </div>
 
         {/* Social share buttons */}
