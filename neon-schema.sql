@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS quiz_completions (
   quiz_id TEXT NOT NULL,
   score INTEGER DEFAULT 0,
   coins_earned INTEGER DEFAULT 0,
+  coins_claimed BOOLEAN DEFAULT TRUE,
   completed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   UNIQUE(user_id, quiz_id)
 );

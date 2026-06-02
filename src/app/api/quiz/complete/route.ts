@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
-import { headers } from "next/headers";
 import { getSessionUser } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { scoreToCoins } from "@/lib/coins";
 import { allQuizzes } from "@/data/quizzes";
-import { rateLimit, getClientIp } from "@/lib/rate-limit";
+import { rateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
   try {
@@ -13,7 +12,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
-    // Rate limit: 1 request per 5 seconds per user
     const rl = rateLimit("quiz-complete", session.userId, 1, 5000);
     if (!rl.allowed) {
       return NextResponse.json({ error: "Too fast. Try again shortly." }, { status: 429 });
@@ -21,66 +19,73 @@ export async function POST(req: Request) {
 
     const { quizId, score } = await req.json();
 
-    // Validate quizId exists
     if (!quizId || !allQuizzes.some((q) => q.id === quizId)) {
       return NextResponse.json({ error: "Invalid quiz" }, { status: 400 });
     }
 
-    // Validate score is integer 0-10
     const validScore = Math.max(0, Math.min(10, Math.floor(Number(score) || 0)));
-
     const sql = getDb();
+    const userId = Number(session.userId);
     const coinsForThisAttempt = scoreToCoins(validScore);
 
-    // Check if already completed
+    // Check existing completion
     const existing = await sql`
-      SELECT id, coins_earned FROM quiz_completions
-      WHERE user_id = ${session.userId} AND quiz_id = ${quizId}
+      SELECT id, coins_earned, coins_claimed FROM quiz_completions
+      WHERE user_id = ${userId} AND quiz_id = ${quizId}
     `;
 
     if (existing.length > 0) {
-      const previousCoins = existing[0].coins_earned ?? 0;
+      const prev = existing[0];
+      const previousClaimedCoins = prev.coins_claimed ? (prev.coins_earned ?? 0) : 0;
+      const bestCoins = Math.max(prev.coins_earned ?? 0, coinsForThisAttempt);
 
-      if (coinsForThisAttempt > previousCoins) {
-        const additionalCoins = coinsForThisAttempt - previousCoins;
+      // Coins to actually award now
+      const coinsToAward = bestCoins - previousClaimedCoins;
 
+      if (coinsToAward > 0) {
         await sql`
           UPDATE quiz_completions
-          SET score = GREATEST(score, ${validScore}), coins_earned = ${coinsForThisAttempt}
-          WHERE user_id = ${session.userId} AND quiz_id = ${quizId}
+          SET score = GREATEST(score, ${validScore}), coins_earned = ${bestCoins}, coins_claimed = TRUE
+          WHERE user_id = ${userId} AND quiz_id = ${quizId}
         `;
 
         const result = await sql`
-          UPDATE users SET coins = coins + ${additionalCoins}
-          WHERE id = ${session.userId}
+          UPDATE users SET coins = coins + ${coinsToAward}
+          WHERE id = ${userId}
           RETURNING coins
         `;
 
         return NextResponse.json({
           coinsEarned: coinsForThisAttempt,
-          coinsAwarded: additionalCoins,
-          previousCoins,
+          coinsAwarded: coinsToAward,
+          previousCoins: previousClaimedCoins,
           totalCoins: result[0].coins,
         });
       }
 
+      // Already claimed equal or more — just mark as claimed
+      await sql`
+        UPDATE quiz_completions SET coins_claimed = TRUE
+        WHERE user_id = ${userId} AND quiz_id = ${quizId}
+      `;
+
       return NextResponse.json({
         coinsEarned: coinsForThisAttempt,
         coinsAwarded: 0,
-        previousCoins,
+        previousCoins: previousClaimedCoins,
         totalCoins: null,
       });
     }
 
-    // First completion
+    // First completion — save and claim immediately
     await sql`
-      INSERT INTO quiz_completions (user_id, quiz_id, score, coins_earned)
-      VALUES (${session.userId}, ${quizId}, ${validScore}, ${coinsForThisAttempt})
+      INSERT INTO quiz_completions (user_id, quiz_id, score, coins_earned, coins_claimed)
+      VALUES (${userId}, ${quizId}, ${validScore}, ${coinsForThisAttempt}, TRUE)
     `;
 
     const result = await sql`
       UPDATE users SET coins = coins + ${coinsForThisAttempt}
-      WHERE id = ${session.userId}
+      WHERE id = ${userId}
       RETURNING coins
     `;
 

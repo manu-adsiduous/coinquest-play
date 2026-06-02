@@ -23,7 +23,7 @@ const testimonials = [
   { emoji: "🔥", name: "BlazeMC_Pro", text: "Bro I literally cashed out yesterday and redeemed it on Roblox right away. This site is legit no cap." },
 ];
 
-type QuizState = "locked" | "playing" | "finished" | "results";
+type QuizState = "locked" | "playing" | "finished" | "results" | "claim-pending";
 
 export default function QuizPage() {
   const params = useParams();
@@ -59,6 +59,8 @@ export default function QuizPage() {
     };
   }, []);
 
+  const [pendingScore, setPendingScore] = useState(0);
+
   useEffect(() => {
     if (!user || !quiz) return;
     const checkCompletion = async () => {
@@ -67,6 +69,13 @@ export default function QuizPage() {
       const completion = data.completions?.find((c: { quizId: string }) => c.quizId === quiz.id);
       if (completion) {
         setPreviousCoinsEarned(completion.coinsEarned ?? 0);
+        // If coins aren't claimed yet, show the claim-pending state
+        if (!completion.coinsClaimed && completion.coinsEarned > 0) {
+          setPendingScore(completion.score ?? 0);
+          setScore(completion.score ?? 0);
+          setCoinsEarnedThisAttempt(completion.coinsEarned);
+          setState("claim-pending");
+        }
       }
     };
     checkCompletion();
@@ -104,6 +113,15 @@ export default function QuizPage() {
         setSelectedAnswer(null);
       } else {
         setState("finished");
+        // Save pending completion for logged-in users so they can claim later
+        if (user && quiz) {
+          const finalScore = newAnswers.filter((a, idx) => quiz.questions[idx] && a === quiz.questions[idx].correctAnswer).length;
+          fetch("/api/quiz/pending", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ quizId: quiz.id, score: finalScore }),
+          }).catch(() => {});
+        }
       }
     }, 1000);
   };
@@ -302,21 +320,34 @@ export default function QuizPage() {
     );
   }
 
-  // FINISHED state
-  if (state === "finished") {
+  // FINISHED state + CLAIM-PENDING state (same UI, different entry point)
+  if (state === "finished" || state === "claim-pending") {
     return (
       <div className="max-w-2xl mx-auto px-4 py-8 fade-in">
         <div className="pixel-card p-8 text-center">
           <div className="text-6xl mb-4">🏆</div>
-          <h2 className="font-pixel text-sm text-white mb-2">Quiz Complete!</h2>
-          <p className="text-text-secondary mb-6">Watch a short ad to see your results and claim your coins!</p>
+          <h2 className="font-pixel text-sm text-white mb-2">
+            {state === "claim-pending" ? "Coins Ready to Claim!" : "Quiz Complete!"}
+          </h2>
+          <p className="text-text-secondary mb-6">
+            {state === "claim-pending"
+              ? "You completed this quiz earlier. Watch a short ad to claim your coins!"
+              : "Watch a short ad to see your results and claim your coins!"}
+          </p>
           <RewardedAd
             adName="quiz-results"
             buttonText={<span className="flex items-center gap-2"><span className="pixel-coin">C</span> Claim Your Coins</span>}
             adLabel="Watch Ad"
             onReward={handleResultsReward}
+            onDismiss={() => {}}
             className="bg-roblox-green text-white hover:brightness-110 w-full text-lg"
           />
+          <button
+            onClick={() => router.push("/")}
+            className="mt-4 text-text-secondary text-sm hover:text-pixel-cyan transition-colors"
+          >
+            Come back later to claim
+          </button>
         </div>
       </div>
     );
