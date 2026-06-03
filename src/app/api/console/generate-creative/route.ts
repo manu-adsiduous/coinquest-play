@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getAdminUser } from "@/lib/auth";
 
+export const maxDuration = 60;
+
 export async function POST(req: Request) {
   const admin = await getAdminUser();
   if (!admin) {
@@ -36,17 +38,17 @@ export async function POST(req: Request) {
 
     const artDesc = categoryArt[category] || "colorful gaming-themed elements and vibrant graphics";
 
-    const prompt = `Create a bold, eye-catching mobile game advertisement poster. Dark blue gradient background with ${artDesc}.
+    const prompt = `Create a bold, eye-catching mobile quiz game advertisement poster. Dark blue gradient background with ${artDesc}.
 
 The main focus is large, bold 3D text reading "${quizTitle}" in white with black outlines and drop shadows, styled like a mobile game title.
 
-At the bottom, include a bright green banner reading "TAKE THE QUIZ & GET FREE ROBUX!" in bold white text.
+At the bottom, include a bright green banner reading "TAKE THE QUIZ & WIN REWARDS!" in bold white text.
 
 Include a gold coin icon with "+4 COINS" text near the banner area.
 
-Include a pile of green Robux-style coins somewhere in the composition.
+Include a pile of shiny green and gold game coins somewhere in the composition.
 
-Style: Vibrant, high-energy, mobile gaming advertisement. Bold typography. Eye-catching colors. Professional quality. No watermarks. Square format 1080x1080.`;
+Style: Vibrant, high-energy, mobile gaming advertisement. Bold typography. Eye-catching colors. Professional quality. No watermarks. Square format.`;
 
     const response = await fetch("https://api.openai.com/v1/images/generations", {
       method: "POST",
@@ -64,9 +66,10 @@ Style: Vibrant, high-energy, mobile gaming advertisement. Bold typography. Eye-c
     });
 
     if (!response.ok) {
-      const err = await response.json();
-      console.error("DALL-E error:", err);
-      return NextResponse.json({ error: "Image generation failed" }, { status: 500 });
+      const err = await response.json().catch(() => ({}));
+      const message = err?.error?.message || "Image generation failed";
+      console.error("DALL-E error:", JSON.stringify(err));
+      return NextResponse.json({ error: message }, { status: 500 });
     }
 
     const data = await response.json();
