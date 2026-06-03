@@ -7,6 +7,7 @@ import { allQuizzes } from "@/data/quizzes";
 import { trackEvent } from "@/lib/analytics";
 import { scoreToCoins, MAX_COINS_PER_QUIZ } from "@/lib/coins";
 import RewardedAd from "@/components/RewardedAd";
+import CreativeGenerator from "@/components/CreativeGenerator";
 import { playCorrect, playWrong, playUnlock, playComplete, playCoins } from "@/lib/sounds";
 import { useMemo } from "react";
 
@@ -29,6 +30,8 @@ export default function QuizPage() {
   const params = useParams();
   const router = useRouter();
   const { user, refreshProfile, addSessionCoins } = useAuth();
+  const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "manu@adsiduous.com").split(",").map(e => e.trim());
+  const isAdmin = user && adminEmails.includes(user.email);
 
   const quiz = allQuizzes.find((q) => q.id === params.id);
 
@@ -205,7 +208,12 @@ export default function QuizPage() {
       <div className="max-w-2xl mx-auto px-4 py-8 fade-in">
         <div className="pixel-card p-8 text-center">
           <div className="text-6xl mb-4">{quiz.emoji}</div>
-          <h1 className="font-pixel text-sm md:text-base text-white mb-2">{quiz.title}</h1>
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <h1 className="font-pixel text-sm md:text-base text-white">{quiz.title}</h1>
+            {isAdmin && (
+              <CreativeGenerator quizTitle={quiz.title} quizId={quiz.id} category={quiz.category} emoji={quiz.emoji} />
+            )}
+          </div>
           <p className="text-text-secondary mb-2">{quiz.description}</p>
           <div className="flex items-center justify-center gap-4 text-sm text-text-secondary mb-6">
             <span className="bg-pixel-blue/20 text-pixel-blue px-3 py-1 rounded-sm border border-pixel-blue/40">{quiz.category}</span>
