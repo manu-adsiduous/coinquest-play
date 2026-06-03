@@ -42,11 +42,11 @@ export async function POST(req: Request) {
 
 The main focus is large, bold 3D text reading "${quizTitle}" in white with black outlines and drop shadows, styled like a mobile game title.
 
-At the bottom, include a bright green banner reading "TAKE THE QUIZ & WIN REWARDS!" in bold white text.
+At the bottom, include a bright green banner reading "TAKE THE QUIZ & GET FREE ROBUX!" in bold white text.
 
 Include a gold coin icon with "+4 COINS" text near the banner area.
 
-Include a pile of shiny green and gold game coins somewhere in the composition.
+Include a pile of green Robux-style coins somewhere in the composition.
 
 Style: Vibrant, high-energy, mobile gaming advertisement. Bold typography. Eye-catching colors. Professional quality. No watermarks. Square format.`;
 
@@ -57,11 +57,11 @@ Style: Vibrant, high-energy, mobile gaming advertisement. Bold typography. Eye-c
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: "dall-e-3",
+        model: "gpt-image-1",
         prompt,
         n: 1,
         size: "1024x1024",
-        quality: "hd",
+        quality: "high",
       }),
     });
 
@@ -73,13 +73,19 @@ Style: Vibrant, high-energy, mobile gaming advertisement. Bold typography. Eye-c
     }
 
     const data = await response.json();
-    const imageUrl = data.data?.[0]?.url;
 
-    if (!imageUrl) {
-      return NextResponse.json({ error: "No image returned" }, { status: 500 });
+    // gpt-image-1 returns b64_json, dall-e-3 returns url
+    const imageUrl = data.data?.[0]?.url;
+    const b64 = data.data?.[0]?.b64_json;
+
+    if (b64) {
+      return NextResponse.json({ imageUrl: `data:image/png;base64,${b64}` });
+    }
+    if (imageUrl) {
+      return NextResponse.json({ imageUrl });
     }
 
-    return NextResponse.json({ imageUrl });
+    return NextResponse.json({ error: "No image returned" }, { status: 500 });
   } catch (error) {
     console.error("Creative generation error:", error);
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
