@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface CreativeGeneratorProps {
   quizTitle: string;
@@ -11,14 +11,24 @@ interface CreativeGeneratorProps {
 
 export default function CreativeGenerator({ quizTitle, quizId, category, emoji }: CreativeGeneratorProps) {
   const [showModal, setShowModal] = useState(false);
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Clean up blob URL on unmount
+  useEffect(() => {
+    return () => {
+      if (blobUrl) URL.revokeObjectURL(blobUrl);
+    };
+  }, [blobUrl]);
 
   const generate = async () => {
     setLoading(true);
     setError("");
-    setImageUrl(null);
+    if (blobUrl) {
+      URL.revokeObjectURL(blobUrl);
+      setBlobUrl(null);
+    }
 
     try {
       const res = await fetch("/api/console/generate-creative", {
@@ -30,7 +40,10 @@ export default function CreativeGenerator({ quizTitle, quizId, category, emoji }
       if (!res.ok) {
         setError(data.error || "Generation failed");
       } else {
-        setImageUrl(data.imageUrl);
+        // Convert base64 or URL to a stable blob URL
+        const imageRes = await fetch(data.imageUrl);
+        const blob = await imageRes.blob();
+        setBlobUrl(URL.createObjectURL(blob));
       }
     } catch {
       setError("Something went wrong");
@@ -38,30 +51,21 @@ export default function CreativeGenerator({ quizTitle, quizId, category, emoji }
     setLoading(false);
   };
 
-  const download = async () => {
-    if (!imageUrl) return;
-    try {
-      const res = await fetch(imageUrl);
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `coinquest-creative-${quizId}.png`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(url), 5000);
-    } catch {
-      // Fallback: open in new tab
-      window.open(imageUrl, "_blank");
-    }
+  const download = () => {
+    if (!blobUrl) return;
+    const a = document.createElement("a");
+    a.href = blobUrl;
+    a.download = `coinquest-creative-${quizId}.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   };
 
   return (
     <>
       {/* Small admin icon */}
       <button
-        onClick={() => { setShowModal(true); if (!imageUrl) generate(); }}
+        onClick={() => { setShowModal(true); if (!blobUrl) generate(); }}
         title="Generate ad creative"
         className="inline-flex items-center justify-center w-8 h-8 bg-pixel-magenta/20 border border-pixel-magenta/40 rounded-sm hover:bg-pixel-magenta/30 transition-colors"
       >
@@ -101,13 +105,13 @@ export default function CreativeGenerator({ quizTitle, quizId, category, emoji }
                     Try again
                   </button>
                 </div>
-              ) : imageUrl ? (
-                <img src={imageUrl} alt="Generated creative" className="w-full h-auto rounded-sm" />
+              ) : blobUrl ? (
+                <img src={blobUrl} alt="Generated creative" className="w-full h-auto rounded-sm" />
               ) : null}
             </div>
 
             {/* Actions */}
-            {imageUrl && !loading && (
+            {blobUrl && !loading && (
               <div className="flex gap-3">
                 <button
                   onClick={download}
