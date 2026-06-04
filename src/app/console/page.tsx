@@ -139,12 +139,17 @@ export default function ConsolePage() {
   }, [range, customFrom, customTo]);
 
   const fetchUsers = useCallback(async () => {
-    const res = await fetch("/api/console/users");
+    let url = `/api/console/users?range=${range}`;
+    if (range === "custom" && customFrom) {
+      url += `&from=${customFrom}`;
+      if (customTo) url += `&to=${customTo}`;
+    }
+    const res = await fetch(url);
     if (res.ok) {
       const data = await res.json();
       setUsers(data.users);
     }
-  }, []);
+  }, [range, customFrom, customTo]);
 
   const fetchGiftCards = useCallback(async () => {
     const res = await fetch("/api/console/gift-cards");
@@ -157,26 +162,31 @@ export default function ConsolePage() {
   }, []);
 
   const fetchEvents = useCallback(async () => {
-    const res = await fetch("/api/console/events?limit=50");
+    let url = `/api/console/events?range=${range}`;
+    if (range === "custom" && customFrom) {
+      url += `&from=${customFrom}`;
+      if (customTo) url += `&to=${customTo}`;
+    }
+    const res = await fetch(url);
     if (res.ok) {
       const data = await res.json();
       setEvents(data.events);
       setEventSummary(data.summary);
       setEventsTotal(data.total);
     }
-  }, []);
+  }, [range, customFrom, customTo]);
 
   useEffect(() => {
     if (!authorized) return;
     fetchStats();
-  }, [authorized, fetchStats]);
+    fetchUsers();
+    fetchEvents();
+  }, [authorized, fetchStats, fetchUsers, fetchEvents]);
 
   useEffect(() => {
     if (!authorized) return;
-    fetchUsers();
     fetchGiftCards();
-    fetchEvents();
-  }, [authorized, fetchUsers, fetchGiftCards, fetchEvents]);
+  }, [authorized, fetchGiftCards]);
 
   const handleAddCodes = async () => {
     const codes = newCodes.split("\n").map(c => c.trim()).filter(Boolean);

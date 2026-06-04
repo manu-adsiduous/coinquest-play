@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAdminUser } from "@/lib/auth";
 import { getDb } from "@/lib/db";
+import { parseDateRange } from "@/lib/date-range";
 
 export async function GET(req: Request) {
   const admin = await getAdminUser();
@@ -10,50 +11,21 @@ export async function GET(req: Request) {
 
   const { searchParams } = new URL(req.url);
   const range = searchParams.get("range") || "all";
-
-  let dateFilter = "";
-  const now = new Date();
-  if (range === "today") {
-    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
-    dateFilter = start;
-  } else if (range === "yesterday") {
-    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1).toISOString();
-    const end = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
-    dateFilter = `${start}|${end}`;
-  } else if (range === "this_month") {
-    const start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-    dateFilter = start;
-  } else if (range === "last_month") {
-    const start = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
-    const end = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-    dateFilter = `${start}|${end}`;
-  } else if (range === "custom") {
-    const from = searchParams.get("from");
-    const to = searchParams.get("to");
-    if (from) {
-      const start = new Date(from).toISOString();
-      if (to) {
-        const end = new Date(new Date(to).getTime() + 86400000).toISOString(); // include end date
-        dateFilter = `${start}|${end}`;
-      } else {
-        dateFilter = start;
-      }
-    }
-  }
+  const from = searchParams.get("from");
+  const to = searchParams.get("to");
+  const { start, end } = parseDateRange(range, from, to);
 
   try {
     const sql = getDb();
-
     let userCount, totalCompletions, totalCoinsEarned;
 
-    if (range === "all") {
+    if (!start) {
       [userCount, totalCompletions, totalCoinsEarned] = await Promise.all([
         sql`SELECT COUNT(*)::int as count FROM users`,
         sql`SELECT COUNT(*)::int as count FROM quiz_completions`,
         sql`SELECT COALESCE(SUM(coins_earned), 0)::int as total FROM quiz_completions`,
       ]);
-    } else if (dateFilter.includes("|")) {
-      const [start, end] = dateFilter.split("|");
+    } else if (end) {
       [userCount, totalCompletions, totalCoinsEarned] = await Promise.all([
         sql`SELECT COUNT(*)::int as count FROM users WHERE created_at >= ${start} AND created_at < ${end}`,
         sql`SELECT COUNT(*)::int as count FROM quiz_completions WHERE completed_at >= ${start} AND completed_at < ${end}`,
@@ -61,9 +33,9 @@ export async function GET(req: Request) {
       ]);
     } else {
       [userCount, totalCompletions, totalCoinsEarned] = await Promise.all([
-        sql`SELECT COUNT(*)::int as count FROM users WHERE created_at >= ${dateFilter}`,
-        sql`SELECT COUNT(*)::int as count FROM quiz_completions WHERE completed_at >= ${dateFilter}`,
-        sql`SELECT COALESCE(SUM(coins_earned), 0)::int as total FROM quiz_completions WHERE completed_at >= ${dateFilter}`,
+        sql`SELECT COUNT(*)::int as count FROM users WHERE created_at >= ${start}`,
+        sql`SELECT COUNT(*)::int as count FROM quiz_completions WHERE completed_at >= ${start}`,
+        sql`SELECT COALESCE(SUM(coins_earned), 0)::int as total FROM quiz_completions WHERE completed_at >= ${start}`,
       ]);
     }
 
