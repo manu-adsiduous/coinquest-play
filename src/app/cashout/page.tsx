@@ -80,7 +80,11 @@ export default function CashoutPage() {
               {giftCardCode}
             </div>
             <p className="text-sm text-text-secondary mb-6">
-              Copy this code and redeem it on the Roblox website to get your Robux!
+              Copy this code and redeem it at{" "}
+              <a href="https://www.roblox.com/redeem" target="_blank" rel="noopener noreferrer" className="text-pixel-cyan hover:underline">
+                roblox.com/redeem
+              </a>
+              {" "}to get your Robux!
             </p>
             <button
               onClick={() => { setGiftCardCode(null); }}
