@@ -23,6 +23,22 @@ export const metadata: Metadata = {
   description:
     "Complete fun quizzes, earn coins, and cash out for Robux gift cards! 100+ quizzes on Roblox, Minecraft, Anime, and more.",
   keywords: ["robux", "free robux", "quiz", "roblox", "coins", "gift cards"],
+  icons: {
+    icon: "/logo.svg",
+    apple: "/logo.svg",
+  },
+  openGraph: {
+    title: "CoinQuest Play - Earn FREE Robux by Playing Quizzes!",
+    description: "Complete fun quizzes, earn coins, and cash out for Robux gift cards!",
+    siteName: "CoinQuest Play",
+    images: [{ url: "/logo.svg", width: 64, height: 64 }],
+  },
+  twitter: {
+    card: "summary",
+    title: "CoinQuest Play - Earn FREE Robux by Playing Quizzes!",
+    description: "Complete fun quizzes, earn coins, and cash out for Robux gift cards!",
+    images: ["/logo.svg"],
+  },
 };
 
 export default function RootLayout({
