@@ -76,6 +76,8 @@ export default function ConsolePage() {
   const [userSort, setUserSort] = useState<{ key: string; dir: "asc" | "desc" }>({ key: "created_at", dir: "desc" });
   const [eventFilterName, setEventFilterName] = useState("");
   const [eventFilterUser, setEventFilterUser] = useState("");
+  const [showEventFilter, setShowEventFilter] = useState(false);
+  const [showUserFilter, setShowUserFilter] = useState(false);
 
   const sortedUsers = useMemo(() => {
     const sorted = [...users];
@@ -438,31 +440,14 @@ export default function ConsolePage() {
 
         {/* Recent events */}
         <div className="pixel-card p-5 lg:col-span-2">
-          <h2 className="font-pixel text-[10px] text-white mb-3">Recent Events</h2>
-          <div className="flex flex-wrap gap-2 mb-3">
-            <select
-              value={eventFilterName}
-              onChange={(e) => setEventFilterName(e.target.value)}
-              className="pixel-input px-2 py-1.5 text-xs"
-            >
-              <option value="">All Events</option>
-              {eventSummary.map((s) => (
-                <option key={s.event_name} value={s.event_name}>{s.event_name} ({s.count})</option>
-              ))}
-            </select>
-            <input
-              type="text"
-              placeholder="Filter by user..."
-              value={eventFilterUser}
-              onChange={(e) => setEventFilterUser(e.target.value)}
-              className="pixel-input px-2 py-1.5 text-xs flex-1 min-w-[120px]"
-            />
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-pixel text-[10px] text-white">Recent Events</h2>
             {(eventFilterName || eventFilterUser) && (
               <button
-                onClick={() => { setEventFilterName(""); setEventFilterUser(""); }}
-                className="text-text-secondary text-xs hover:text-pixel-cyan px-2"
+                onClick={() => { setEventFilterName(""); setEventFilterUser(""); setShowEventFilter(false); setShowUserFilter(false); }}
+                className="text-roblox-red text-[10px] hover:underline"
               >
-                Clear
+                Clear filters
               </button>
             )}
           </div>
@@ -470,8 +455,60 @@ export default function ConsolePage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b-2 border-border-pixel text-text-secondary text-xs text-left">
-                  <th className="pb-2 pr-3">Event</th>
-                  <th className="pb-2 pr-3">User</th>
+                  <th className="pb-2 pr-3 relative">
+                    <span className="flex items-center gap-1.5">
+                      Event
+                      <button
+                        onClick={() => { setShowEventFilter(!showEventFilter); setShowUserFilter(false); }}
+                        className={`text-[10px] transition-colors ${eventFilterName ? "text-pixel-cyan" : "text-text-secondary hover:text-pixel-cyan"}`}
+                      >
+                        🔽
+                      </button>
+                    </span>
+                    {showEventFilter && (
+                      <div className="absolute left-0 top-full mt-1 w-48 pixel-card p-2 z-50 slide-up max-h-52 overflow-y-auto">
+                        <button
+                          onClick={() => { setEventFilterName(""); setShowEventFilter(false); }}
+                          className={`w-full text-left px-2 py-1.5 text-xs rounded-sm transition-colors ${!eventFilterName ? "text-pixel-cyan bg-pixel-cyan/10" : "text-text-secondary hover:text-white hover:bg-card-hover"}`}
+                        >
+                          All Events
+                        </button>
+                        {eventSummary.map((s) => (
+                          <button
+                            key={s.event_name}
+                            onClick={() => { setEventFilterName(s.event_name); setShowEventFilter(false); }}
+                            className={`w-full text-left px-2 py-1.5 text-xs rounded-sm transition-colors flex justify-between ${eventFilterName === s.event_name ? "text-pixel-cyan bg-pixel-cyan/10" : "text-text-secondary hover:text-white hover:bg-card-hover"}`}
+                          >
+                            <span>{s.event_name}</span>
+                            <span className="text-coin-gold">{s.count}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </th>
+                  <th className="pb-2 pr-3 relative">
+                    <span className="flex items-center gap-1.5">
+                      User
+                      <button
+                        onClick={() => { setShowUserFilter(!showUserFilter); setShowEventFilter(false); }}
+                        className={`text-[10px] transition-colors ${eventFilterUser ? "text-pixel-cyan" : "text-text-secondary hover:text-pixel-cyan"}`}
+                      >
+                        🔽
+                      </button>
+                    </span>
+                    {showUserFilter && (
+                      <div className="absolute left-0 top-full mt-1 w-48 pixel-card p-2 z-50 slide-up">
+                        <input
+                          type="text"
+                          placeholder="Search user..."
+                          value={eventFilterUser}
+                          onChange={(e) => setEventFilterUser(e.target.value)}
+                          autoFocus
+                          className="pixel-input w-full px-2 py-1.5 text-xs"
+                        />
+                      </div>
+                    )}
+                  </th>
                   <th className="pb-2 pr-3">Details</th>
                   <th className="pb-2">Time</th>
                 </tr>
