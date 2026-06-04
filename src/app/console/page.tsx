@@ -460,9 +460,9 @@ export default function ConsolePage() {
                       Event
                       <button
                         onClick={() => { setShowEventFilter(!showEventFilter); setShowUserFilter(false); }}
-                        className={`text-[10px] transition-colors ${eventFilterName ? "text-pixel-cyan" : "text-text-secondary hover:text-pixel-cyan"}`}
+                        className={`text-[10px] transition-colors ${eventFilterName ? "text-pixel-magenta" : "text-pixel-magenta/50 hover:text-pixel-magenta"}`}
                       >
-                        🔽
+                        ▼
                       </button>
                     </span>
                     {showEventFilter && (
@@ -491,9 +491,9 @@ export default function ConsolePage() {
                       User
                       <button
                         onClick={() => { setShowUserFilter(!showUserFilter); setShowEventFilter(false); }}
-                        className={`text-[10px] transition-colors ${eventFilterUser ? "text-pixel-cyan" : "text-text-secondary hover:text-pixel-cyan"}`}
+                        className={`text-[10px] transition-colors ${eventFilterUser ? "text-pixel-magenta" : "text-pixel-magenta/50 hover:text-pixel-magenta"}`}
                       >
-                        🔽
+                        ▼
                       </button>
                     </span>
                     {showUserFilter && (
