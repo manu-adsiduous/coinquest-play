@@ -30,8 +30,7 @@ export default function QuizPage() {
   const params = useParams();
   const router = useRouter();
   const { user, refreshProfile, addSessionCoins } = useAuth();
-  const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "manu@adsiduous.com").split(",").map(e => e.trim());
-  const isAdmin = user && adminEmails.includes(user.email);
+  const isAdmin = user?.isAdmin;
 
   const quiz = allQuizzes.find((q) => q.id === params.id);
 

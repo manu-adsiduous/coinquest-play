@@ -8,8 +8,7 @@ import { useState } from "react";
 export default function Navbar() {
   const { user, signOut, loading, sessionCoins } = useAuth();
   const router = useRouter();
-  const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "manu@adsiduous.com").split(",").map(e => e.trim());
-  const isAdmin = user && adminEmails.includes(user.email);
+  const isAdmin = user?.isAdmin;
   const [menuOpen, setMenuOpen] = useState(false);
   const [showCoinPopup, setShowCoinPopup] = useState(false);
 

@@ -19,6 +19,7 @@ export interface UserProfile {
   username: string;
   coins: number;
   avatar: string;
+  isAdmin: boolean;
   created_at: string;
 }
 

@@ -80,7 +80,8 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
       });
       const data = await res.json();
       if (!res.ok) return { error: data.error || "Login failed" };
-      setUser(data.user);
+      // Fetch full profile with isAdmin flag
+      await fetchMe();
       setSessionCoins(0);
       return { error: null };
     } catch {

@@ -25,9 +25,10 @@ export default function LoginPage() {
       setLoading(false);
     } else {
       trackEvent("login", { method: "email" });
-      // Redirect admins to console
-      const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "manu@adsiduous.com").split(",").map(e => e.trim());
-      router.push(adminEmails.includes(email) ? "/console" : "/");
+      // Check if admin and redirect accordingly
+      const meRes = await fetch("/api/auth/me");
+      const meData = await meRes.json();
+      router.push(meData.user?.isAdmin ? "/console" : "/");
     }
   };
 

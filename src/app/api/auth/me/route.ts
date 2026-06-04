@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSessionUser } from "@/lib/auth";
+import { getSessionUser, getAdminUser } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 
 export async function GET() {
@@ -19,7 +19,8 @@ export async function GET() {
       return NextResponse.json({ user: null });
     }
 
-    return NextResponse.json({ user: result[0] });
+    const admin = await getAdminUser();
+    return NextResponse.json({ user: { ...result[0], isAdmin: !!admin } });
   } catch (error) {
     console.error("Auth check error:", error);
     return NextResponse.json({ user: null });
