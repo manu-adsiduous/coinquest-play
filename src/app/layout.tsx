@@ -31,13 +31,13 @@ export const metadata: Metadata = {
     title: "CoinQuest Play - Earn FREE Robux by Playing Quizzes!",
     description: "Complete fun quizzes, earn coins, and cash out for Robux gift cards!",
     siteName: "CoinQuest Play",
-    images: [{ url: "/logo.svg", width: 64, height: 64 }],
+    images: [{ url: "/logo.png", width: 512, height: 512 }],
   },
   twitter: {
     card: "summary",
     title: "CoinQuest Play - Earn FREE Robux by Playing Quizzes!",
     description: "Complete fun quizzes, earn coins, and cash out for Robux gift cards!",
-    images: ["/logo.svg"],
+    images: ["/logo.png"],
   },
 };
 
