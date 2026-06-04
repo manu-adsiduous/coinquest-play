@@ -32,9 +32,25 @@ export function trackEvent(eventName: string, params?: Record<string, unknown>) 
 
   const eventId = generateEventId();
 
-  // Google Analytics
+  // Google Analytics + Google Ads conversions
   if (window.gtag) {
     window.gtag("event", eventName, params);
+
+    // Send Google Ads conversion events
+    const GADS_CONVERSIONS: Record<string, string> = {
+      sign_up: "conversion",
+      quiz_completed: "conversion",
+      cashout: "conversion",
+      quiz_viewed: "conversion",
+      quiz_unlocked: "conversion",
+    };
+    if (GADS_CONVERSIONS[eventName]) {
+      window.gtag("event", GADS_CONVERSIONS[eventName], {
+        send_to: process.env.NEXT_PUBLIC_GOOGLE_ADS_ID,
+        event_category: eventName,
+        ...params,
+      });
+    }
   }
 
   // Meta Pixel (client-side)

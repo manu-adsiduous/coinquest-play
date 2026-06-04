@@ -31,6 +31,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const gaMeasurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
+  const gadsId = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID;
   const metaPixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID;
 
   return (
@@ -56,19 +57,20 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col">
-        {/* Google Analytics */}
-        {gaMeasurementId && (
+        {/* Google Analytics + Google Ads */}
+        {(gaMeasurementId || gadsId) && (
           <>
             <Script
-              src={`https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`}
+              src={`https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId || gadsId}`}
               strategy="afterInteractive"
             />
-            <Script id="google-analytics" strategy="afterInteractive">
+            <Script id="google-tags" strategy="afterInteractive">
               {`
                 window.dataLayer = window.dataLayer || [];
                 function gtag(){dataLayer.push(arguments);}
                 gtag('js', new Date());
-                gtag('config', '${gaMeasurementId}');
+                ${gaMeasurementId ? `gtag('config', '${gaMeasurementId}');` : ""}
+                ${gadsId ? `gtag('config', '${gadsId}');` : ""}
               `}
             </Script>
           </>
