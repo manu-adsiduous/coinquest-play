@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Outer border -->
+  <rect x="0" y="0" width="64" height="64" rx="4" fill="#B8860B"/>
+  <!-- Gold face -->
+  <rect x="4" y="4" width="56" height="56" rx="2" fill="#FFD700"/>
+  <!-- Inner highlight (top-left shine) -->
+  <rect x="4" y="4" width="56" height="8" rx="2" fill="rgba(255,255,255,0.3)"/>
+  <rect x="4" y="4" width="8" height="56" rx="2" fill="rgba(255,255,255,0.2)"/>
+  <!-- Inner shadow (bottom-right) -->
+  <rect x="4" y="52" width="56" height="8" rx="2" fill="rgba(0,0,0,0.15)"/>
+  <rect x="52" y="4" width="8" height="56" rx="2" fill="rgba(0,0,0,0.1)"/>
+  <!-- Letter C -->
+  <text x="32" y="46" text-anchor="middle" font-family="'Press Start 2P', monospace" font-size="32" font-weight="bold" fill="#B8860B">C</text>
+</svg>
