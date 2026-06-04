@@ -21,7 +21,7 @@ export async function GET(req: Request) {
 
     if (!start) {
       users = await sql`
-        SELECT u.id, u.email, u.username, u.coins, u.created_at,
+        SELECT u.id, u.email, u.username, u.coins, u.created_at, u.acquisition_source,
           COALESCE(qc.quiz_count, 0)::int as quizzes_completed,
           COALESCE(qc.total_coins, 0)::int as total_coins_earned,
           COALESCE(gc.redemption_count, 0)::int as redemptions
@@ -32,7 +32,7 @@ export async function GET(req: Request) {
       `;
     } else if (end) {
       users = await sql`
-        SELECT u.id, u.email, u.username, u.coins, u.created_at,
+        SELECT u.id, u.email, u.username, u.coins, u.created_at, u.acquisition_source,
           COALESCE(qc.quiz_count, 0)::int as quizzes_completed,
           COALESCE(qc.total_coins, 0)::int as total_coins_earned,
           COALESCE(gc.redemption_count, 0)::int as redemptions
@@ -44,7 +44,7 @@ export async function GET(req: Request) {
       `;
     } else {
       users = await sql`
-        SELECT u.id, u.email, u.username, u.coins, u.created_at,
+        SELECT u.id, u.email, u.username, u.coins, u.created_at, u.acquisition_source,
           COALESCE(qc.quiz_count, 0)::int as quizzes_completed,
           COALESCE(qc.total_coins, 0)::int as total_coins_earned,
           COALESCE(gc.redemption_count, 0)::int as redemptions

@@ -21,6 +21,7 @@ interface UserRow {
   quizzes_completed: number;
   total_coins_earned: number;
   redemptions: number;
+  acquisition_source: Record<string, string> | null;
 }
 
 interface EventRow {
@@ -349,6 +350,7 @@ export default function ConsolePage() {
                     { key: "coins", label: "Coins" },
                     { key: "quizzes_completed", label: "Quizzes" },
                     { key: "redemptions", label: "Cashouts" },
+                    { key: "source", label: "Source" },
                   ].map((col) => (
                     <th
                       key={col.key}
@@ -377,18 +379,35 @@ export default function ConsolePage() {
                       )}
                     </td>
                     <td className="py-2 pr-3 text-pixel-cyan">{u.quizzes_completed}</td>
-                    <td className="py-2">
+                    <td className="py-2 pr-3">
                       {u.redemptions > 0 ? (
                         <span className="text-roblox-green font-bold">{u.redemptions}</span>
                       ) : (
                         <span className="text-text-secondary">0</span>
                       )}
                     </td>
+                    <td className="py-2">
+                      {u.acquisition_source?.utm_source ? (
+                        <span className={`text-[10px] font-bold ${
+                          u.acquisition_source.utm_source === "meta" ? "text-pixel-blue" :
+                          u.acquisition_source.utm_source === "google" ? "text-roblox-green" :
+                          u.acquisition_source.utm_source === "tiktok" ? "text-pixel-cyan" :
+                          "text-text-secondary"
+                        }`}>
+                          {u.acquisition_source.utm_source}
+                          {u.acquisition_source.utm_campaign && (
+                            <span className="text-text-secondary font-normal ml-1">/ {u.acquisition_source.utm_campaign}</span>
+                          )}
+                        </span>
+                      ) : (
+                        <span className="text-text-secondary text-[10px]">—</span>
+                      )}
+                    </td>
                   </tr>
                 ))}
                 {users.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="py-4 text-center text-text-secondary text-xs">No users yet</td>
+                    <td colSpan={5} className="py-4 text-center text-text-secondary text-xs">No users yet</td>
                   </tr>
                 )}
               </tbody>

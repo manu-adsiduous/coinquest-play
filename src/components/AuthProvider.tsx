@@ -56,10 +56,16 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
 
   const signUp = async (email: string, password: string, username: string) => {
     try {
+      // Get acquisition data from localStorage
+      let acquisition = {};
+      try {
+        acquisition = JSON.parse(localStorage.getItem("cq_acquisition") || "{}");
+      } catch {}
+
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, username }),
+        body: JSON.stringify({ email, password, username, acquisition }),
       });
       const data = await res.json();
       if (!res.ok) return { error: data.error || "Signup failed" };

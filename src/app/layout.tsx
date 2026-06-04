@@ -5,6 +5,8 @@ import AuthProvider from "@/components/AuthProvider";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PageViewTracker from "@/components/PageViewTracker";
+import AcquisitionTracker from "@/components/AcquisitionTracker";
+import { Suspense } from "react";
 import "./globals.css";
 
 const pressStart = Press_Start_2P({
@@ -109,6 +111,7 @@ export default function RootLayout({
         )}
         <AuthProvider>
           <PageViewTracker />
+          <Suspense><AcquisitionTracker /></Suspense>
           <Navbar />
           <main className="flex-1">{children}</main>
           <Footer />

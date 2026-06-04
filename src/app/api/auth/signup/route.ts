@@ -22,7 +22,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const { email, password, username } = await req.json();
+    const { email, password, username, acquisition } = await req.json();
 
     if (!email || !password || !username) {
       return NextResponse.json({ error: "All fields are required" }, { status: 400 });
@@ -45,9 +45,10 @@ export async function POST(req: Request) {
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
+    const acqData = acquisition && typeof acquisition === "object" ? JSON.stringify(acquisition) : "{}";
     const result = await sql`
-      INSERT INTO users (email, username, password_hash, coins)
-      VALUES (${email}, ${username}, ${passwordHash}, 0)
+      INSERT INTO users (email, username, password_hash, coins, acquisition_source)
+      VALUES (${email}, ${username}, ${passwordHash}, 0, ${acqData}::jsonb)
       RETURNING id, email, username, coins, created_at
     `;
 
