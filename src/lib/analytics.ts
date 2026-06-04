@@ -36,19 +36,17 @@ export function trackEvent(eventName: string, params?: Record<string, unknown>) 
   if (window.gtag) {
     window.gtag("event", eventName, params);
 
-    // Send Google Ads conversion events
-    const GADS_CONVERSIONS: Record<string, string> = {
-      sign_up: "conversion",
-      quiz_completed: "conversion",
-      cashout: "conversion",
-      quiz_viewed: "conversion",
-      quiz_unlocked: "conversion",
+    // Send Google Ads conversion events with specific labels
+    const GADS_LABELS: Record<string, string> = {
+      sign_up: "AW-18213485612/JMt9CMCciLkcEKz47uxD",
+      quiz_viewed: "AW-18213485612/hWEcCNnW8rgcEKz47uxD",
+      quiz_unlocked: "AW-18213485612/9YZJCNzW8rgcEKz47uxD",
+      quiz_completed: "AW-18213485612/nkQ2CN_W8rgcEKz47uxD",
+      cashout: "AW-18213485612/C9o7CNrX8rgcEKz47uxD",
     };
-    if (GADS_CONVERSIONS[eventName]) {
-      window.gtag("event", GADS_CONVERSIONS[eventName], {
-        send_to: process.env.NEXT_PUBLIC_GOOGLE_ADS_ID,
-        event_category: eventName,
-        ...params,
+    if (GADS_LABELS[eventName]) {
+      window.gtag("event", "conversion", {
+        send_to: GADS_LABELS[eventName],
       });
     }
   }
