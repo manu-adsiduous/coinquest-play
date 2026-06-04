@@ -2,7 +2,7 @@
 
 import { useAuth } from "@/components/AuthProvider";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 
 interface Stats {
   userCount: number;
@@ -73,6 +73,43 @@ export default function ConsolePage() {
   const [events, setEvents] = useState<EventRow[]>([]);
   const [eventSummary, setEventSummary] = useState<EventSummary[]>([]);
   const [eventsTotal, setEventsTotal] = useState(0);
+  const [userSort, setUserSort] = useState<{ key: string; dir: "asc" | "desc" }>({ key: "created_at", dir: "desc" });
+  const [eventFilterName, setEventFilterName] = useState("");
+  const [eventFilterUser, setEventFilterUser] = useState("");
+
+  const sortedUsers = useMemo(() => {
+    const sorted = [...users];
+    sorted.sort((a, b) => {
+      const key = userSort.key as keyof UserRow;
+      const aVal = a[key];
+      const bVal = b[key];
+      if (typeof aVal === "number" && typeof bVal === "number") {
+        return userSort.dir === "asc" ? aVal - bVal : bVal - aVal;
+      }
+      const aStr = String(aVal ?? "");
+      const bStr = String(bVal ?? "");
+      return userSort.dir === "asc" ? aStr.localeCompare(bStr) : bStr.localeCompare(aStr);
+    });
+    return sorted;
+  }, [users, userSort]);
+
+  const toggleUserSort = (key: string) => {
+    setUserSort((prev) =>
+      prev.key === key
+        ? { key, dir: prev.dir === "asc" ? "desc" : "asc" }
+        : { key, dir: "desc" }
+    );
+  };
+
+  const filteredEvents = useMemo(() => {
+    return events.filter((e) => {
+      const matchesName = !eventFilterName || e.event_name === eventFilterName;
+      const matchesUser = !eventFilterUser ||
+        (e.username && e.username.toLowerCase().includes(eventFilterUser.toLowerCase())) ||
+        (e.email && e.email.toLowerCase().includes(eventFilterUser.toLowerCase()));
+      return matchesName && matchesUser;
+    });
+  }, [events, eventFilterName, eventFilterUser]);
 
   // Check admin access
   useEffect(() => {
@@ -262,14 +299,27 @@ export default function ConsolePage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b-2 border-border-pixel text-text-secondary text-xs text-left">
-                  <th className="pb-2 pr-3">User</th>
-                  <th className="pb-2 pr-3">Coins</th>
-                  <th className="pb-2 pr-3">Quizzes</th>
-                  <th className="pb-2">Cashouts</th>
+                  {[
+                    { key: "created_at", label: "User" },
+                    { key: "coins", label: "Coins" },
+                    { key: "quizzes_completed", label: "Quizzes" },
+                    { key: "redemptions", label: "Cashouts" },
+                  ].map((col) => (
+                    <th
+                      key={col.key}
+                      className="pb-2 pr-3 cursor-pointer hover:text-pixel-cyan transition-colors select-none"
+                      onClick={() => toggleUserSort(col.key)}
+                    >
+                      {col.label}
+                      {userSort.key === col.key && (
+                        <span className="ml-1">{userSort.dir === "asc" ? "▲" : "▼"}</span>
+                      )}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                {users.map((u) => (
+                {sortedUsers.map((u) => (
                   <tr key={u.id} className="border-b border-border-pixel/50">
                     <td className="py-2 pr-3">
                       <div className="text-white font-bold text-xs">{u.username}</div>
@@ -388,7 +438,34 @@ export default function ConsolePage() {
 
         {/* Recent events */}
         <div className="pixel-card p-5 lg:col-span-2">
-          <h2 className="font-pixel text-[10px] text-white mb-4">Recent Events</h2>
+          <h2 className="font-pixel text-[10px] text-white mb-3">Recent Events</h2>
+          <div className="flex flex-wrap gap-2 mb-3">
+            <select
+              value={eventFilterName}
+              onChange={(e) => setEventFilterName(e.target.value)}
+              className="pixel-input px-2 py-1.5 text-xs"
+            >
+              <option value="">All Events</option>
+              {eventSummary.map((s) => (
+                <option key={s.event_name} value={s.event_name}>{s.event_name} ({s.count})</option>
+              ))}
+            </select>
+            <input
+              type="text"
+              placeholder="Filter by user..."
+              value={eventFilterUser}
+              onChange={(e) => setEventFilterUser(e.target.value)}
+              className="pixel-input px-2 py-1.5 text-xs flex-1 min-w-[120px]"
+            />
+            {(eventFilterName || eventFilterUser) && (
+              <button
+                onClick={() => { setEventFilterName(""); setEventFilterUser(""); }}
+                className="text-text-secondary text-xs hover:text-pixel-cyan px-2"
+              >
+                Clear
+              </button>
+            )}
+          </div>
           <div className="overflow-x-auto max-h-96 overflow-y-auto">
             <table className="w-full text-sm">
               <thead>
@@ -400,7 +477,7 @@ export default function ConsolePage() {
                 </tr>
               </thead>
               <tbody>
-                {events.map((e) => (
+                {filteredEvents.map((e) => (
                   <tr key={e.id} className="border-b border-border-pixel/50">
                     <td className="py-2 pr-3">
                       <span className="text-pixel-cyan font-bold text-xs">{e.event_name}</span>
@@ -422,7 +499,7 @@ export default function ConsolePage() {
                     </td>
                   </tr>
                 ))}
-                {events.length === 0 && (
+                {filteredEvents.length === 0 && (
                   <tr>
                     <td colSpan={4} className="py-4 text-center text-text-secondary text-xs">No events yet</td>
                   </tr>
