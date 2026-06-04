@@ -95,6 +95,8 @@ export default function ConsolePage() {
   const [eventFilterName, setEventFilterName] = useState("");
   const [eventFilterUser, setEventFilterUser] = useState("");
   const [showEventFilter, setShowEventFilter] = useState(false);
+  const [userSourceFilter, setUserSourceFilter] = useState("");
+  const [showSourceFilter, setShowSourceFilter] = useState(false);
   const [showUserFilter, setShowUserFilter] = useState(false);
   const [dayRetention, setDayRetention] = useState<DayRetention[]>([]);
   const [cohorts, setCohorts] = useState<CohortData[]>([]);
@@ -102,7 +104,14 @@ export default function ConsolePage() {
   const [retentionTotal, setRetentionTotal] = useState(0);
 
   const sortedUsers = useMemo(() => {
-    const sorted = [...users];
+    let filtered = users;
+    if (userSourceFilter) {
+      filtered = users.filter((u) => {
+        const src = u.acquisition_source?.utm_source || "—";
+        return src === userSourceFilter;
+      });
+    }
+    const sorted = [...filtered];
     sorted.sort((a, b) => {
       const key = userSort.key as keyof UserRow;
       const aVal = a[key];
@@ -115,7 +124,16 @@ export default function ConsolePage() {
       return userSort.dir === "asc" ? aStr.localeCompare(bStr) : bStr.localeCompare(aStr);
     });
     return sorted;
-  }, [users, userSort]);
+  }, [users, userSort, userSourceFilter]);
+
+  const uniqueSources = useMemo(() => {
+    const sources = new Map<string, number>();
+    for (const u of users) {
+      const src = u.acquisition_source?.utm_source || "—";
+      sources.set(src, (sources.get(src) || 0) + 1);
+    }
+    return Array.from(sources.entries()).sort((a, b) => b[1] - a[1]);
+  }, [users]);
 
   const toggleUserSort = (key: string) => {
     setUserSort((prev) =>
@@ -340,8 +358,15 @@ export default function ConsolePage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* User list */}
         <div className="pixel-card p-5">
-          <h2 className="font-pixel text-[10px] text-white mb-4">Users ({users.length})</h2>
-          <div className="overflow-x-auto max-h-96 overflow-y-auto">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-pixel text-[10px] text-white">Users ({sortedUsers.length}{userSourceFilter ? ` of ${users.length}` : ""})</h2>
+            {userSourceFilter && (
+              <button onClick={() => { setUserSourceFilter(""); setShowSourceFilter(false); }} className="text-roblox-red text-[10px] hover:underline">
+                Clear filter
+              </button>
+            )}
+          </div>
+          <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b-2 border-border-pixel text-text-secondary text-xs text-left">
@@ -350,7 +375,6 @@ export default function ConsolePage() {
                     { key: "coins", label: "Coins" },
                     { key: "quizzes_completed", label: "Quizzes" },
                     { key: "redemptions", label: "Cashouts" },
-                    { key: "source", label: "Source" },
                   ].map((col) => (
                     <th
                       key={col.key}
@@ -363,6 +387,37 @@ export default function ConsolePage() {
                       )}
                     </th>
                   ))}
+                  <th className="pb-2 relative">
+                    <span className="flex items-center gap-1.5">
+                      Source
+                      <button
+                        onClick={() => { setShowSourceFilter(!showSourceFilter); }}
+                        className={`text-[10px] transition-colors ${userSourceFilter ? "text-pixel-magenta" : "text-pixel-magenta/50 hover:text-pixel-magenta"}`}
+                      >
+                        ▼
+                      </button>
+                    </span>
+                    {showSourceFilter && (
+                      <div className="absolute right-0 top-full mt-1 w-44 pixel-card p-2 z-50 slide-up max-h-52 overflow-y-auto">
+                        <button
+                          onClick={() => { setUserSourceFilter(""); setShowSourceFilter(false); }}
+                          className={`w-full text-left px-2 py-1.5 text-xs rounded-sm transition-colors ${!userSourceFilter ? "text-pixel-cyan bg-pixel-cyan/10" : "text-text-secondary hover:text-white hover:bg-card-hover"}`}
+                        >
+                          All Sources
+                        </button>
+                        {uniqueSources.map(([src, count]) => (
+                          <button
+                            key={src}
+                            onClick={() => { setUserSourceFilter(src); setShowSourceFilter(false); }}
+                            className={`w-full text-left px-2 py-1.5 text-xs rounded-sm transition-colors flex justify-between ${userSourceFilter === src ? "text-pixel-cyan bg-pixel-cyan/10" : "text-text-secondary hover:text-white hover:bg-card-hover"}`}
+                          >
+                            <span>{src}</span>
+                            <span className="text-coin-gold">{count}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </th>
                 </tr>
               </thead>
               <tbody>
