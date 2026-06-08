@@ -15,15 +15,19 @@ interface AdBannerProps {
   slot: string;
   /** Extra classes for the wrapper (e.g. margins) */
   className?: string;
-  /** AdSense ad format — defaults to responsive "auto" */
-  format?: string;
-  /** Allow full-width responsive sizing */
-  responsive?: boolean;
+  /** Fixed ad width in px (defaults to a 300x250 medium rectangle) */
+  width?: number;
+  /** Fixed ad height in px */
+  height?: number;
 }
 
 /**
  * Renders a single AdSense display banner unit. This is separate from the
  * rewarded H5 ad flow (adBreak/adConfig) used to unlock quizzes / claim coins.
+ *
+ * We request a fixed size (default 300x250) rather than a responsive unit so the
+ * box always exactly matches the creative — no reserved empty space below short
+ * creatives. The ad is centered within its wrapper.
  *
  * Each mounted instance requests exactly one ad. To request a fresh ad (e.g.
  * one per quiz question), give the component a changing `key` so it remounts.
@@ -31,8 +35,8 @@ interface AdBannerProps {
 export default function AdBanner({
   slot,
   className = "",
-  format = "auto",
-  responsive = true,
+  width = 300,
+  height = 250,
 }: AdBannerProps) {
   const insRef = useRef<HTMLModElement>(null);
   const pushed = useRef(false);
@@ -50,15 +54,13 @@ export default function AdBanner({
   }, []);
 
   return (
-    <div className={`overflow-hidden ${className}`}>
+    <div className={`flex justify-center overflow-hidden ${className}`}>
       <ins
         ref={insRef}
         className="adsbygoogle"
-        style={{ display: "block", width: "100%" }}
+        style={{ display: "inline-block", width: `${width}px`, height: `${height}px` }}
         data-ad-client={AD_CLIENT}
         data-ad-slot={slot}
-        data-ad-format={format}
-        data-full-width-responsive={responsive ? "true" : "false"}
       />
     </div>
   );
