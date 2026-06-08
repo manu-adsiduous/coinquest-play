@@ -539,10 +539,11 @@ export default function QuizPage() {
               </button>
             )}
           </div>
-
-          {/* Display banner ad — under the More Quizzes button */}
-          <AdBanner slot="5131569023" className="mt-2" />
         </div>
+
+        {/* Display banner ad — under the More Quizzes button (block context so it
+            stays contained; inside a flex column it would overflow the card) */}
+        <AdBanner slot="5131569023" className="mt-3" />
       </div>
     </div>
   );
