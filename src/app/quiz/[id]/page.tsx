@@ -327,10 +327,11 @@ export default function QuizPage() {
               );
             })}
           </div>
-        </div>
 
-        {/* Display banner ad — under the quiz, one fresh request per question */}
-        <AdBanner key={currentQuestion} slot="1268190108" className="mt-6" />
+          {/* Display banner ad — inside the card, under the answer options.
+              key forces a fresh request per question (10 per quiz). */}
+          <AdBanner key={currentQuestion} slot="1268190108" className="mt-6" />
+        </div>
       </div>
     );
   }
