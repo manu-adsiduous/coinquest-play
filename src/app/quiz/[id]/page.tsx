@@ -270,7 +270,7 @@ export default function QuizPage() {
             </div>
 
             {/* Display banner ad — below testimonials */}
-            <AdBanner slot="1383895707" className="mt-6 -mx-8" />
+            <AdBanner slot="1383895707" className="mt-6" />
           </div>
         </div>
       </div>
@@ -370,7 +370,7 @@ export default function QuizPage() {
           )}
 
           {/* Display banner ad — under the Claim Your Coins button */}
-          <AdBanner slot="7830414786" className="mt-6 -mx-8" />
+          <AdBanner slot="7830414786" className="mt-6" />
         </div>
       </div>
     );
@@ -540,7 +540,7 @@ export default function QuizPage() {
           </div>
 
           {/* Display banner ad — under the More Quizzes button */}
-          <AdBanner slot="5131569023" className="mt-2 -mx-8" />
+          <AdBanner slot="5131569023" className="mt-2" />
         </div>
       </div>
     </div>

@@ -23,9 +23,11 @@ interface AdBannerProps {
  *
  * Responsive: the ad fits the wrapper's width (so it never gets cut off) and
  * AdSense sets the height to match the served creative, so the box hugs the ad
- * with no empty space below. For this to size correctly the ad unit must be a
- * "Responsive" display unit in AdSense (a fixed/Square unit reserves a fixed
- * height and will leave gaps under shorter creatives).
+ * with no empty space below. full-width-responsive is off so the ad stays
+ * within its container (e.g. a card) instead of expanding to the full mobile
+ * screen width. For this to size correctly the ad unit must be a "Responsive"
+ * display unit in AdSense (a fixed/Square unit reserves a fixed height and will
+ * leave gaps under shorter creatives).
  *
  * Each mounted instance requests exactly one ad. To request a fresh ad (e.g.
  * one per quiz question), give the component a changing `key` so it remounts.
@@ -55,7 +57,7 @@ export default function AdBanner({ slot, className = "" }: AdBannerProps) {
         data-ad-client={AD_CLIENT}
         data-ad-slot={slot}
         data-ad-format="auto"
-        data-full-width-responsive="true"
+        data-full-width-responsive="false"
       />
     </div>
   );
