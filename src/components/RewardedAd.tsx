@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 
 declare global {
   interface Window {
@@ -39,6 +39,7 @@ interface RewardedAdProps {
   adLabel?: string;
   onReward: () => void;
   onDismiss?: () => void;
+  onNoAdChange?: (noAd: boolean) => void;
   className?: string;
   disabled?: boolean;
 }
@@ -49,11 +50,17 @@ export default function RewardedAd({
   adLabel,
   onReward,
   onDismiss,
+  onNoAdChange,
   className = "",
   disabled = false,
 }: RewardedAdProps) {
   const [loading, setLoading] = useState(false);
   const [noAd, setNoAd] = useState(false);
+
+  // Report "no ad available" state up so callers can react (e.g. show a fallback)
+  useEffect(() => {
+    onNoAdChange?.(noAd);
+  }, [noAd, onNoAdChange]);
 
   const showAd = useCallback(() => {
     if (disabled || loading) return;

@@ -49,6 +49,7 @@ export default function QuizPage() {
   const [previousCoinsEarned, setPreviousCoinsEarned] = useState(0);
   const [coinsAwarded, setCoinsAwarded] = useState(0);
   const [coinsEarnedThisAttempt, setCoinsEarnedThisAttempt] = useState(0);
+  const [noResultsAd, setNoResultsAd] = useState(false);
 
   // Preload ads on quiz pages — we know ads are needed here
   useEffect(() => {
@@ -269,7 +270,7 @@ export default function QuizPage() {
             </div>
 
             {/* Display banner ad — below testimonials */}
-            <AdBanner slot="1383895707" className="mt-6" />
+            <AdBanner slot="1383895707" className="mt-6 -mx-8" />
           </div>
         </div>
       </div>
@@ -354,18 +355,22 @@ export default function QuizPage() {
             adLabel="Watch Ad"
             onReward={handleResultsReward}
             onDismiss={() => {}}
+            onNoAdChange={setNoResultsAd}
             className="bg-roblox-green text-white hover:brightness-110 w-full text-lg"
           />
 
-          {/* Display banner ad — under the Claim Your Coins button */}
-          <AdBanner slot="7830414786" className="mt-6" />
+          {/* Only offer "come back later" when no rewarded ad is available */}
+          {noResultsAd && (
+            <button
+              onClick={() => router.push("/")}
+              className="mt-4 text-text-secondary text-sm hover:text-pixel-cyan transition-colors"
+            >
+              Come back later to claim
+            </button>
+          )}
 
-          <button
-            onClick={() => router.push("/")}
-            className="mt-4 text-text-secondary text-sm hover:text-pixel-cyan transition-colors"
-          >
-            Come back later to claim
-          </button>
+          {/* Display banner ad — under the Claim Your Coins button */}
+          <AdBanner slot="7830414786" className="mt-6 -mx-8" />
         </div>
       </div>
     );
@@ -535,7 +540,7 @@ export default function QuizPage() {
           </div>
 
           {/* Display banner ad — under the More Quizzes button */}
-          <AdBanner slot="5131569023" className="mt-2" />
+          <AdBanner slot="5131569023" className="mt-2 -mx-8" />
         </div>
       </div>
     </div>

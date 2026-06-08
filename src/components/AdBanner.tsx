@@ -50,11 +50,11 @@ export default function AdBanner({
   }, []);
 
   return (
-    <div className={`w-full overflow-hidden ${className}`}>
+    <div className={`overflow-hidden ${className}`}>
       <ins
         ref={insRef}
         className="adsbygoogle"
-        style={{ display: "block" }}
+        style={{ display: "block", width: "100%" }}
         data-ad-client={AD_CLIENT}
         data-ad-slot={slot}
         data-ad-format={format}
