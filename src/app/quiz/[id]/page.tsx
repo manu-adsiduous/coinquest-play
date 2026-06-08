@@ -7,6 +7,7 @@ import { allQuizzes } from "@/data/quizzes";
 import { trackEvent } from "@/lib/analytics";
 import { scoreToCoins, MAX_COINS_PER_QUIZ } from "@/lib/coins";
 import RewardedAd from "@/components/RewardedAd";
+import AdBanner from "@/components/AdBanner";
 import CreativeGenerator from "@/components/CreativeGenerator";
 import { playCorrect, playWrong, playUnlock, playComplete, playCoins } from "@/lib/sounds";
 import { useMemo } from "react";
@@ -266,6 +267,9 @@ export default function QuizPage() {
                 </div>
               ))}
             </div>
+
+            {/* Display banner ad — below testimonials */}
+            <AdBanner slot="1383895707" className="mt-6" />
           </div>
         </div>
       </div>
@@ -323,6 +327,9 @@ export default function QuizPage() {
             })}
           </div>
         </div>
+
+        {/* Display banner ad — under the quiz, one fresh request per question */}
+        <AdBanner key={currentQuestion} slot="1268190108" className="mt-6" />
       </div>
     );
   }
@@ -349,6 +356,10 @@ export default function QuizPage() {
             onDismiss={() => {}}
             className="bg-roblox-green text-white hover:brightness-110 w-full text-lg"
           />
+
+          {/* Display banner ad — under the Claim Your Coins button */}
+          <AdBanner slot="7830414786" className="mt-6" />
+
           <button
             onClick={() => router.push("/")}
             className="mt-4 text-text-secondary text-sm hover:text-pixel-cyan transition-colors"
@@ -522,6 +533,9 @@ export default function QuizPage() {
               </button>
             )}
           </div>
+
+          {/* Display banner ad — under the More Quizzes button */}
+          <AdBanner slot="5131569023" className="mt-2" />
         </div>
       </div>
     </div>
