@@ -22,7 +22,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const { email, password, username, acquisition } = await req.json();
+    const { email, password, username, acquisition, guestCoins } = await req.json();
 
     if (!email || !password || !username) {
       return NextResponse.json({ error: "All fields are required" }, { status: 400 });
@@ -46,9 +46,18 @@ export async function POST(req: Request) {
 
     const passwordHash = await bcrypt.hash(password, 10);
     const acqData = acquisition && typeof acquisition === "object" ? JSON.stringify(acquisition) : "{}";
+
+    // Carry over coins earned as a guest before signing up. Capped to deter
+    // farming (guests can retake quizzes for unlimited session coins).
+    const MAX_GUEST_SIGNUP_COINS = 50;
+    const startingCoins = Math.min(
+      MAX_GUEST_SIGNUP_COINS,
+      Math.max(0, Math.floor(Number(guestCoins) || 0)),
+    );
+
     const result = await sql`
       INSERT INTO users (email, username, password_hash, coins, acquisition_source)
-      VALUES (${email}, ${username}, ${passwordHash}, 0, ${acqData}::jsonb)
+      VALUES (${email}, ${username}, ${passwordHash}, ${startingCoins}, ${acqData}::jsonb)
       RETURNING id, email, username, coins, created_at
     `;
 

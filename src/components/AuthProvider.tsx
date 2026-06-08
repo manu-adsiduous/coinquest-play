@@ -65,7 +65,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, username, acquisition }),
+        body: JSON.stringify({ email, password, username, acquisition, guestCoins: sessionCoins }),
       });
       const data = await res.json();
       if (!res.ok) return { error: data.error || "Signup failed" };
