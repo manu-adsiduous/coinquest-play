@@ -6,6 +6,12 @@ import { recordCoinTx } from "@/lib/ledger";
 import { allQuizzes } from "@/data/quizzes";
 import { rateLimit } from "@/lib/rate-limit";
 
+// Durable velocity guard (ledger-based, reliable on serverless): block scripted
+// bursts and cap sustained earning. Values are generous so real binge-players
+// never trip them — only automated farming does.
+const MIN_SECONDS_BETWEEN_COMPLETIONS = 3;
+const MAX_COMPLETIONS_PER_HOUR = 80;
+
 export async function POST(req: Request) {
   try {
     const session = await getSessionUser();
@@ -27,6 +33,27 @@ export async function POST(req: Request) {
 
     const sql = getDb();
     const userId = Number(session.userId);
+
+    // Velocity guard against scripted farming, measured from the coin ledger.
+    const [vel] = await sql`
+      SELECT
+        COUNT(*) FILTER (WHERE created_at > NOW() - ${MIN_SECONDS_BETWEEN_COMPLETIONS} * INTERVAL '1 second')::int AS recent,
+        COUNT(*) FILTER (WHERE created_at > NOW() - INTERVAL '1 hour')::int AS last_hour
+      FROM coin_transactions
+      WHERE user_id = ${userId} AND reason = 'quiz_complete'
+    `;
+    if (vel.recent > 0) {
+      return NextResponse.json(
+        { error: "You're going too fast — try again in a moment." },
+        { status: 429 },
+      );
+    }
+    if (vel.last_hour >= MAX_COMPLETIONS_PER_HOUR) {
+      return NextResponse.json(
+        { error: "You've earned a lot this hour! Come back in a bit to earn more." },
+        { status: 429 },
+      );
+    }
 
     // The pending step already graded this attempt server-side and stored the
     // result. coins_paid tracks how much we've actually credited for this quiz,

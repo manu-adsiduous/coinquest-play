@@ -2,7 +2,10 @@ import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { recordCoinTx } from "@/lib/ledger";
-import { rateLimit } from "@/lib/rate-limit";
+
+// Durable cashout limits (DB-based, reliable on serverless — unlike the
+// in-memory limiter, which doesn't survive cold starts or span instances).
+const MAX_CASHOUTS_PER_DAY = 3;
 
 export async function POST() {
   try {
@@ -11,13 +14,29 @@ export async function POST() {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
-    // Rate limit: 1 redemption per minute per user
-    const rl = rateLimit("cashout", session.userId, 1, 60000);
-    if (!rl.allowed) {
+    const sql = getDb();
+    const userId = Number(session.userId);
+
+    // 1 redemption per minute per user
+    const [recent] = await sql`
+      SELECT COUNT(*)::int AS n FROM gift_cards
+      WHERE redeemed_by = ${userId} AND redeemed_at > NOW() - INTERVAL '60 seconds'
+    `;
+    if (recent.n > 0) {
       return NextResponse.json({ error: "Please wait before trying again." }, { status: 429 });
     }
 
-    const sql = getDb();
+    // Daily cashout cap per user
+    const [today] = await sql`
+      SELECT COUNT(*)::int AS n FROM gift_cards
+      WHERE redeemed_by = ${userId} AND redeemed_at > NOW() - INTERVAL '24 hours'
+    `;
+    if (today.n >= MAX_CASHOUTS_PER_DAY) {
+      return NextResponse.json(
+        { error: "You've reached the daily cashout limit. Try again tomorrow!" },
+        { status: 429 },
+      );
+    }
 
     // Atomic: deduct coins only if user has >= 200
     const deductResult = await sql`
