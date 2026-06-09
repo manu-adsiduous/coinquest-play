@@ -49,11 +49,11 @@ export default function AdBanner({ slot, className = "" }: AdBannerProps) {
   }, []);
 
   return (
-    <div className={`overflow-hidden ${className}`}>
+    <div className={`flex justify-center overflow-hidden ${className}`}>
       <ins
         ref={insRef}
         className="adsbygoogle"
-        style={{ display: "block" }}
+        style={{ display: "block", width: "100%" }}
         data-ad-client={AD_CLIENT}
         data-ad-slot={slot}
         data-ad-format="auto"

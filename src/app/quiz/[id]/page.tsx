@@ -272,7 +272,7 @@ export default function QuizPage() {
             </div>
 
             {/* Display banner ad — below testimonials */}
-            <AdBanner slot="1383895707" className="mt-6 -mx-8" />
+            <AdBanner slot="1383895707" className="mt-6" />
           </div>
         </div>
       </div>
@@ -332,7 +332,7 @@ export default function QuizPage() {
 
           {/* Display banner ad — inside the card, under the answer options.
               key forces a fresh request per question (10 per quiz). */}
-          <AdBanner key={currentQuestion} slot="1268190108" className="mt-6 -mx-8" />
+          <AdBanner key={currentQuestion} slot="1268190108" className="mt-6" />
         </div>
       </div>
     );
@@ -373,7 +373,7 @@ export default function QuizPage() {
           )}
 
           {/* Display banner ad — under the Claim Your Coins button */}
-          <AdBanner slot="7830414786" className="mt-6 -mx-8" />
+          <AdBanner slot="7830414786" className="mt-6" />
         </div>
       </div>
     );
@@ -545,7 +545,7 @@ export default function QuizPage() {
 
         {/* Display banner ad — under the More Quizzes button (block context so it
             stays contained; inside a flex column it would overflow the card) */}
-        <AdBanner slot="5131569023" className="mt-8 -mx-8" />
+        <AdBanner slot="5131569023" className="mt-8" />
       </div>
     </div>
   );
