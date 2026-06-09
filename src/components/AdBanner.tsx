@@ -49,7 +49,7 @@ export default function AdBanner({ slot, className = "" }: AdBannerProps) {
   }, []);
 
   return (
-    <div className={className}>
+    <div className={`overflow-hidden ${className}`}>
       <ins
         ref={insRef}
         className="adsbygoogle"
