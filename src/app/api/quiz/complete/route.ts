@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { scoreToCoins } from "@/lib/coins";
+import { scoreToCoins, gradeAnswers } from "@/lib/coins";
 import { allQuizzes } from "@/data/quizzes";
 import { rateLimit } from "@/lib/rate-limit";
 
@@ -17,35 +17,32 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Too fast. Try again shortly." }, { status: 429 });
     }
 
-    const { quizId, score } = await req.json();
+    const { quizId, answers } = await req.json();
 
-    if (!quizId || !allQuizzes.some((q) => q.id === quizId)) {
+    const quiz = allQuizzes.find((q) => q.id === quizId);
+    if (!quiz) {
       return NextResponse.json({ error: "Invalid quiz" }, { status: 400 });
     }
 
-    const validScore = Math.max(0, Math.min(10, Math.floor(Number(score) || 0)));
     const sql = getDb();
     const userId = Number(session.userId);
-    const coinsForThisAttempt = scoreToCoins(validScore);
 
-    // Check existing completion
+    // The pending step already graded this attempt server-side and stored the
+    // result, so claiming relies on the row — not on anything the client sends.
     const existing = await sql`
-      SELECT id, coins_earned, coins_claimed FROM quiz_completions
+      SELECT id, score, coins_earned, coins_claimed FROM quiz_completions
       WHERE user_id = ${userId} AND quiz_id = ${quizId}
     `;
 
     if (existing.length > 0) {
       const prev = existing[0];
-      const previousClaimedCoins = prev.coins_claimed ? (prev.coins_earned ?? 0) : 0;
-      const bestCoins = Math.max(prev.coins_earned ?? 0, coinsForThisAttempt);
-
-      // Coins to actually award now
-      const coinsToAward = bestCoins - previousClaimedCoins;
+      const earned = prev.coins_earned ?? 0;
+      const previousClaimedCoins = prev.coins_claimed ? earned : 0;
+      const coinsToAward = earned - previousClaimedCoins;
 
       if (coinsToAward > 0) {
         await sql`
-          UPDATE quiz_completions
-          SET score = GREATEST(score, ${validScore}), coins_earned = ${bestCoins}, coins_claimed = TRUE
+          UPDATE quiz_completions SET coins_claimed = TRUE
           WHERE user_id = ${userId} AND quiz_id = ${quizId}
         `;
 
@@ -56,42 +53,56 @@ export async function POST(req: Request) {
         `;
 
         return NextResponse.json({
-          coinsEarned: coinsForThisAttempt,
+          coinsEarned: earned,
           coinsAwarded: coinsToAward,
           previousCoins: previousClaimedCoins,
           totalCoins: result[0].coins,
         });
       }
 
-      // Already claimed equal or more — just mark as claimed
+      // Already claimed an equal or greater amount — just ensure it's marked claimed
       await sql`
         UPDATE quiz_completions SET coins_claimed = TRUE
         WHERE user_id = ${userId} AND quiz_id = ${quizId}
       `;
 
       return NextResponse.json({
-        coinsEarned: coinsForThisAttempt,
+        coinsEarned: earned,
         coinsAwarded: 0,
         previousCoins: previousClaimedCoins,
         totalCoins: null,
       });
     }
 
-    // First completion — save and claim immediately
+    // No pending row (e.g. the pending save failed mid-flow). Grade the submitted
+    // answers server-side and record the completion — still never trusting a
+    // client-supplied score.
+    const validScore = gradeAnswers(answers, quiz);
+    const coins = scoreToCoins(validScore);
+
     await sql`
       INSERT INTO quiz_completions (user_id, quiz_id, score, coins_earned, coins_claimed)
-      VALUES (${userId}, ${quizId}, ${validScore}, ${coinsForThisAttempt}, TRUE)
+      VALUES (${userId}, ${quizId}, ${validScore}, ${coins}, TRUE)
     `;
 
+    if (coins <= 0) {
+      return NextResponse.json({
+        coinsEarned: 0,
+        coinsAwarded: 0,
+        previousCoins: 0,
+        totalCoins: null,
+      });
+    }
+
     const result = await sql`
-      UPDATE users SET coins = coins + ${coinsForThisAttempt}
+      UPDATE users SET coins = coins + ${coins}
       WHERE id = ${userId}
       RETURNING coins
     `;
 
     return NextResponse.json({
-      coinsEarned: coinsForThisAttempt,
-      coinsAwarded: coinsForThisAttempt,
+      coinsEarned: coins,
+      coinsAwarded: coins,
       previousCoins: 0,
       totalCoins: result[0].coins,
     });

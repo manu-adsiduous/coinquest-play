@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { scoreToCoins } from "@/lib/coins";
+import { scoreToCoins, gradeAnswers } from "@/lib/coins";
 import { allQuizzes } from "@/data/quizzes";
 import { rateLimit } from "@/lib/rate-limit";
 
@@ -18,12 +18,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Too fast" }, { status: 429 });
     }
 
-    const { quizId, score } = await req.json();
-    if (!quizId || !allQuizzes.some((q) => q.id === quizId)) {
+    const { quizId, answers } = await req.json();
+    const quiz = allQuizzes.find((q) => q.id === quizId);
+    if (!quiz) {
       return NextResponse.json({ error: "Invalid quiz" }, { status: 400 });
     }
 
-    const validScore = Math.max(0, Math.min(10, Math.floor(Number(score) || 0)));
+    // Grade server-side against the answer key — never trust a client score.
+    const validScore = gradeAnswers(answers, quiz);
     const coinsForAttempt = scoreToCoins(validScore);
 
     const sql = getDb();

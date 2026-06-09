@@ -117,13 +117,13 @@ export default function QuizPage() {
         setSelectedAnswer(null);
       } else {
         setState("finished");
-        // Save pending completion for logged-in users so they can claim later
+        // Save pending completion for logged-in users so they can claim later.
+        // Send the raw answers — the server grades them against the answer key.
         if (user && quiz) {
-          const finalScore = newAnswers.filter((a, idx) => quiz.questions[idx] && a === quiz.questions[idx].correctAnswer).length;
           fetch("/api/quiz/pending", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ quizId: quiz.id, score: finalScore }),
+            body: JSON.stringify({ quizId: quiz.id, answers: newAnswers }),
           }).catch(() => {});
         }
       }
@@ -168,11 +168,13 @@ export default function QuizPage() {
       return;
     }
 
-    // Logged-in users: award via API (handles retake logic server-side)
+    // Logged-in users: award via API (handles retake logic server-side).
+    // Claiming relies on the pending row's server-graded value; answers are sent
+    // only as a fallback for the rare case the pending save didn't land.
     const res = await fetch("/api/quiz/complete", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ quizId: quiz.id, score }),
+      body: JSON.stringify({ quizId: quiz.id, answers }),
     });
     const data = await res.json();
 
