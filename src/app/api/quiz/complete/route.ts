@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { scoreToCoins, gradeAnswers } from "@/lib/coins";
+import { recordCoinTx } from "@/lib/ledger";
 import { allQuizzes } from "@/data/quizzes";
 import { rateLimit } from "@/lib/rate-limit";
 
@@ -28,21 +29,23 @@ export async function POST(req: Request) {
     const userId = Number(session.userId);
 
     // The pending step already graded this attempt server-side and stored the
-    // result, so claiming relies on the row — not on anything the client sends.
+    // result. coins_paid tracks how much we've actually credited for this quiz,
+    // so we only ever award (best earned − already paid) — capping total credit
+    // at coins_earned and preventing the retake double-award.
     const existing = await sql`
-      SELECT id, score, coins_earned, coins_claimed FROM quiz_completions
+      SELECT id, coins_earned, coins_paid FROM quiz_completions
       WHERE user_id = ${userId} AND quiz_id = ${quizId}
     `;
 
     if (existing.length > 0) {
       const prev = existing[0];
       const earned = prev.coins_earned ?? 0;
-      const previousClaimedCoins = prev.coins_claimed ? earned : 0;
-      const coinsToAward = earned - previousClaimedCoins;
+      const paid = prev.coins_paid ?? 0;
+      const coinsToAward = Math.max(0, earned - paid);
 
       if (coinsToAward > 0) {
         await sql`
-          UPDATE quiz_completions SET coins_claimed = TRUE
+          UPDATE quiz_completions SET coins_paid = ${earned}, coins_claimed = TRUE
           WHERE user_id = ${userId} AND quiz_id = ${quizId}
         `;
 
@@ -52,15 +55,17 @@ export async function POST(req: Request) {
           RETURNING coins
         `;
 
+        await recordCoinTx(userId, coinsToAward, "quiz_complete", quizId);
+
         return NextResponse.json({
           coinsEarned: earned,
           coinsAwarded: coinsToAward,
-          previousCoins: previousClaimedCoins,
+          previousCoins: paid,
           totalCoins: result[0].coins,
         });
       }
 
-      // Already claimed an equal or greater amount — just ensure it's marked claimed
+      // Already fully paid for this quiz — just ensure it's marked claimed
       await sql`
         UPDATE quiz_completions SET coins_claimed = TRUE
         WHERE user_id = ${userId} AND quiz_id = ${quizId}
@@ -69,7 +74,7 @@ export async function POST(req: Request) {
       return NextResponse.json({
         coinsEarned: earned,
         coinsAwarded: 0,
-        previousCoins: previousClaimedCoins,
+        previousCoins: paid,
         totalCoins: null,
       });
     }
@@ -81,8 +86,8 @@ export async function POST(req: Request) {
     const coins = scoreToCoins(validScore);
 
     await sql`
-      INSERT INTO quiz_completions (user_id, quiz_id, score, coins_earned, coins_claimed)
-      VALUES (${userId}, ${quizId}, ${validScore}, ${coins}, TRUE)
+      INSERT INTO quiz_completions (user_id, quiz_id, score, coins_earned, coins_paid, coins_claimed)
+      VALUES (${userId}, ${quizId}, ${validScore}, ${coins}, ${coins}, TRUE)
     `;
 
     if (coins <= 0) {
@@ -99,6 +104,8 @@ export async function POST(req: Request) {
       WHERE id = ${userId}
       RETURNING coins
     `;
+
+    await recordCoinTx(userId, coins, "quiz_complete", quizId);
 
     return NextResponse.json({
       coinsEarned: coins,

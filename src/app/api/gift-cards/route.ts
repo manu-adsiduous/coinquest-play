@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import { getDb } from "@/lib/db";
+import { recordCoinTx } from "@/lib/ledger";
 import { rateLimit } from "@/lib/rate-limit";
 
 export async function POST() {
@@ -53,6 +54,10 @@ export async function POST() {
         { status: 404 }
       );
     }
+
+    // Record the spend only once a card is actually dispensed (the deduct/refund
+    // round-trip when no card is available nets zero, so it isn't logged).
+    await recordCoinTx(Number(session.userId), -200, "cashout", cardResult[0].code);
 
     return NextResponse.json({ code: cardResult[0].code });
   } catch (error) {

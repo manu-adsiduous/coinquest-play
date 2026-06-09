@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import bcrypt from "bcryptjs";
 import { getDb } from "@/lib/db";
 import { signToken, sessionCookieOptions } from "@/lib/auth";
+import { recordCoinTx } from "@/lib/ledger";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -62,6 +63,9 @@ export async function POST(req: Request) {
     `;
 
     const user = result[0];
+    if (startingCoins > 0) {
+      await recordCoinTx(Number(user.id), startingCoins, "guest_signup");
+    }
     const token = signToken({ userId: user.id, email: user.email });
 
     const response = NextResponse.json({
