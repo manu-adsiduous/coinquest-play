@@ -218,6 +218,11 @@ export default function ConsolePage() {
       url += `&from=${customFrom}`;
       if (customTo) url += `&to=${customTo}`;
     }
+    // Server-side user filter returns the user's full history (not just the
+    // global feed slice), so investigations see every event for that user.
+    if (eventFilterUser.trim()) {
+      url += `&user=${encodeURIComponent(eventFilterUser.trim())}`;
+    }
     const res = await fetch(url);
     if (res.ok) {
       const data = await res.json();
@@ -225,14 +230,20 @@ export default function ConsolePage() {
       setEventSummary(data.summary);
       setEventsTotal(data.total);
     }
-  }, [range, customFrom, customTo]);
+  }, [range, customFrom, customTo, eventFilterUser]);
 
   useEffect(() => {
     if (!authorized) return;
     fetchStats();
     fetchUsers();
-    fetchEvents();
-  }, [authorized, fetchStats, fetchUsers, fetchEvents]);
+  }, [authorized, fetchStats, fetchUsers]);
+
+  // Debounced so typing in the user filter doesn't fire a request per keystroke.
+  useEffect(() => {
+    if (!authorized) return;
+    const t = setTimeout(fetchEvents, 300);
+    return () => clearTimeout(t);
+  }, [authorized, fetchEvents]);
 
   useEffect(() => {
     if (!authorized) return;

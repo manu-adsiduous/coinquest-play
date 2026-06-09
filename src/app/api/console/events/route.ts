@@ -14,39 +14,50 @@ export async function GET(req: Request) {
   const from = searchParams.get("from");
   const to = searchParams.get("to");
   const { start, end } = parseDateRange(range, from, to);
-  const limit = Math.min(Number(searchParams.get("limit")) || 500, 1000);
+
+  // Optional username/email substring filter, applied server-side so we return
+  // a user's COMPLETE history rather than whatever falls in the global feed.
+  const userQuery = searchParams.get("user")?.trim() || null;
+  const userLike = userQuery ? `%${userQuery}%` : null;
+
+  // When filtering by user, return everything; otherwise cap the global feed.
+  const limit = userQuery
+    ? 5000
+    : Math.min(Number(searchParams.get("limit")) || 500, 1000);
+
+  // Nullable filter params — a NULL value disables that condition (the ::casts
+  // give Postgres a type for the NULL-check so it can plan the query).
+  const startVal = start ?? null;
+  const endVal = end ?? null;
 
   try {
     const sql = getDb();
-    let events, countResult, summary;
-
-    if (!start) {
-      [events, countResult, summary] = await Promise.all([
-        sql`SELECT e.id, e.event_name, e.properties, e.created_at, u.username, u.email
-            FROM events e LEFT JOIN users u ON u.id = e.user_id
-            ORDER BY e.created_at DESC LIMIT ${limit}`,
-        sql`SELECT COUNT(*)::int as total FROM events`,
-        sql`SELECT event_name, COUNT(*)::int as count FROM events GROUP BY event_name ORDER BY count DESC`,
-      ]);
-    } else if (end) {
-      [events, countResult, summary] = await Promise.all([
-        sql`SELECT e.id, e.event_name, e.properties, e.created_at, u.username, u.email
-            FROM events e LEFT JOIN users u ON u.id = e.user_id
-            WHERE e.created_at >= ${start} AND e.created_at < ${end}
-            ORDER BY e.created_at DESC LIMIT ${limit}`,
-        sql`SELECT COUNT(*)::int as total FROM events WHERE created_at >= ${start} AND created_at < ${end}`,
-        sql`SELECT event_name, COUNT(*)::int as count FROM events WHERE created_at >= ${start} AND created_at < ${end} GROUP BY event_name ORDER BY count DESC`,
-      ]);
-    } else {
-      [events, countResult, summary] = await Promise.all([
-        sql`SELECT e.id, e.event_name, e.properties, e.created_at, u.username, u.email
-            FROM events e LEFT JOIN users u ON u.id = e.user_id
-            WHERE e.created_at >= ${start}
-            ORDER BY e.created_at DESC LIMIT ${limit}`,
-        sql`SELECT COUNT(*)::int as total FROM events WHERE created_at >= ${start}`,
-        sql`SELECT event_name, COUNT(*)::int as count FROM events WHERE created_at >= ${start} GROUP BY event_name ORDER BY count DESC`,
-      ]);
-    }
+    const [events, countResult, summary] = await Promise.all([
+      sql`
+        SELECT e.id, e.event_name, e.properties, e.created_at, u.username, u.email
+        FROM events e LEFT JOIN users u ON u.id = e.user_id
+        WHERE (${startVal}::timestamptz IS NULL OR e.created_at >= ${startVal})
+          AND (${endVal}::timestamptz IS NULL OR e.created_at < ${endVal})
+          AND (${userLike}::text IS NULL OR u.username ILIKE ${userLike} OR u.email ILIKE ${userLike})
+        ORDER BY e.created_at DESC
+        LIMIT ${limit}
+      `,
+      sql`
+        SELECT COUNT(*)::int as total
+        FROM events e LEFT JOIN users u ON u.id = e.user_id
+        WHERE (${startVal}::timestamptz IS NULL OR e.created_at >= ${startVal})
+          AND (${endVal}::timestamptz IS NULL OR e.created_at < ${endVal})
+          AND (${userLike}::text IS NULL OR u.username ILIKE ${userLike} OR u.email ILIKE ${userLike})
+      `,
+      sql`
+        SELECT e.event_name, COUNT(*)::int as count
+        FROM events e LEFT JOIN users u ON u.id = e.user_id
+        WHERE (${startVal}::timestamptz IS NULL OR e.created_at >= ${startVal})
+          AND (${endVal}::timestamptz IS NULL OR e.created_at < ${endVal})
+          AND (${userLike}::text IS NULL OR u.username ILIKE ${userLike} OR u.email ILIKE ${userLike})
+        GROUP BY e.event_name ORDER BY count DESC
+      `,
+    ]);
 
     return NextResponse.json({
       events,
