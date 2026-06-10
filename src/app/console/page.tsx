@@ -7,7 +7,11 @@ import { useEffect, useState, useCallback, useMemo } from "react";
 interface Stats {
   userCount: number;
   quizzesTaken: number;
+  quizzesTakenGuest: number;
+  quizzesTakenRegistered: number;
   totalAdsWatched: number;
+  adsWatchedGuest: number;
+  adsWatchedRegistered: number;
   adsPerUser: number;
   totalCoinsEarned: number;
   coinsPerUser: number;
@@ -350,10 +354,16 @@ export default function ConsolePage() {
           <div className="pixel-card p-4 text-center">
             <div className="text-2xl font-bold text-pixel-blue">{stats.quizzesTaken}</div>
             <div className="text-xs text-text-secondary mt-1">Quizzes Taken</div>
+            <div className="text-[10px] text-text-secondary/70 mt-0.5">
+              {stats.quizzesTakenRegistered} reg · {stats.quizzesTakenGuest} guest
+            </div>
           </div>
           <div className="pixel-card p-4 text-center">
             <div className="text-2xl font-bold text-roblox-green">{stats.totalAdsWatched}</div>
             <div className="text-xs text-text-secondary mt-1">Ads Watched</div>
+            <div className="text-[10px] text-text-secondary/70 mt-0.5">
+              {stats.adsWatchedRegistered} reg · {stats.adsWatchedGuest} guest
+            </div>
           </div>
           <div className="pixel-card p-4 text-center">
             <div className="text-2xl font-bold text-pixel-magenta">{stats.adsPerUser}</div>

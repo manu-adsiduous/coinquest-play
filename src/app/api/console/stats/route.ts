@@ -30,17 +30,24 @@ export async function GET(req: Request) {
           AND (${endVal}::timestamptz IS NULL OR created_at < ${endVal})
           AND email <> ALL(${adminEmails})
       `,
-      // Quizzes taken — event-based so it includes guests (NULL user_id), excludes admins
+      // Quizzes taken — event-based, split into guest (NULL user_id) vs
+      // registered, excluding admins.
       sql`
-        SELECT COUNT(*)::int as count FROM events
+        SELECT
+          COUNT(*) FILTER (WHERE user_id IS NULL)::int as guest,
+          COUNT(*) FILTER (WHERE user_id IS NOT NULL)::int as registered
+        FROM events
         WHERE event_name = 'quiz_completed'
           AND (${startVal}::timestamptz IS NULL OR created_at >= ${startVal})
           AND (${endVal}::timestamptz IS NULL OR created_at < ${endVal})
           AND (user_id IS NULL OR user_id NOT IN (SELECT id FROM users WHERE email = ANY(${adminEmails})))
       `,
-      // Rewarded ad views = unlock ad + claim ad, event-based (includes guests)
+      // Rewarded ad views = unlock ad + claim ad, event-based, guest vs registered
       sql`
-        SELECT COUNT(*)::int as count FROM events
+        SELECT
+          COUNT(*) FILTER (WHERE user_id IS NULL)::int as guest,
+          COUNT(*) FILTER (WHERE user_id IS NOT NULL)::int as registered
+        FROM events
         WHERE event_name IN ('quiz_unlocked', 'quiz_completed')
           AND (${startVal}::timestamptz IS NULL OR created_at >= ${startVal})
           AND (${endVal}::timestamptz IS NULL OR created_at < ${endVal})
@@ -56,14 +63,22 @@ export async function GET(req: Request) {
     ]);
 
     const users = userCount[0].count;
-    const taken = quizzesTaken[0].count;
-    const ads = adsWatched[0].count;
+    const takenGuest = quizzesTaken[0].guest;
+    const takenReg = quizzesTaken[0].registered;
+    const taken = takenGuest + takenReg;
+    const adsGuest = adsWatched[0].guest;
+    const adsReg = adsWatched[0].registered;
+    const ads = adsGuest + adsReg;
     const coins = totalCoinsEarned[0].total;
 
     return NextResponse.json({
       userCount: users,
       quizzesTaken: taken,
+      quizzesTakenGuest: takenGuest,
+      quizzesTakenRegistered: takenReg,
       totalAdsWatched: ads,
+      adsWatchedGuest: adsGuest,
+      adsWatchedRegistered: adsReg,
       adsPerUser: users > 0 ? Math.round((ads / users) * 10) / 10 : 0,
       totalCoinsEarned: coins,
       coinsPerUser: users > 0 ? Math.round((coins / users) * 10) / 10 : 0,
