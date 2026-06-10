@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAdminUser } from "@/lib/auth";
+import { getAdminUser, ADMIN_EMAILS } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 
 export async function GET() {
@@ -10,6 +10,9 @@ export async function GET() {
 
   try {
     const sql = getDb();
+
+    // Exclude admin accounts so retention reflects real users only.
+    const adminEmails = ADMIN_EMAILS;
 
     // Day-N retention: of all users, what % had activity N days after signup
     const dayNRetention = await sql`
@@ -22,6 +25,7 @@ export async function GET() {
         FROM users u
         INNER JOIN events e ON e.user_id = u.id
         WHERE e.created_at > u.created_at + interval '1 hour'
+          AND u.email <> ALL(${adminEmails})
       )
       SELECT
         days_after,
@@ -32,7 +36,7 @@ export async function GET() {
       ORDER BY days_after
     `;
 
-    const totalUsers = await sql`SELECT COUNT(*)::int as count FROM users`;
+    const totalUsers = await sql`SELECT COUNT(*)::int as count FROM users WHERE email <> ALL(${adminEmails})`;
     const total = totalUsers[0].count;
 
     // Build day-N map
@@ -55,6 +59,7 @@ export async function GET() {
           DATE_TRUNC('week', created_at)::date as cohort_week,
           created_at as signup_date
         FROM users
+        WHERE email <> ALL(${adminEmails})
       ),
       activity AS (
         SELECT
@@ -81,6 +86,7 @@ export async function GET() {
         DATE_TRUNC('week', created_at)::date as cohort_week,
         COUNT(*)::int as size
       FROM users
+      WHERE email <> ALL(${adminEmails})
       GROUP BY cohort_week
       ORDER BY cohort_week
     `;
@@ -112,6 +118,7 @@ export async function GET() {
       FROM (
         SELECT user_id, COUNT(*)::int as quiz_count
         FROM quiz_completions
+        WHERE user_id NOT IN (SELECT id FROM users WHERE email = ANY(${adminEmails}))
         GROUP BY user_id
       ) sub
       GROUP BY quiz_count

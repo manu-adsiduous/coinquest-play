@@ -7,7 +7,7 @@ if (process.env.NODE_ENV === "production" && JWT_SECRET === "dev-secret-change-m
   throw new Error("JWT_SECRET must be set in production");
 }
 const COOKIE_NAME = "cq_session";
-const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "manu@adsiduous.com").split(",").map(e => e.trim());
+export const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "manu@adsiduous.com").split(",").map(e => e.trim());
 
 export interface JwtPayload {
   userId: string;
