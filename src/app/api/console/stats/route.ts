@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAdminUser } from "@/lib/auth";
+import { getAdminUser, ADMIN_EMAILS } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { parseDateRange } from "@/lib/date-range";
 
@@ -14,30 +14,34 @@ export async function GET(req: Request) {
   const from = searchParams.get("from");
   const to = searchParams.get("to");
   const { start, end } = parseDateRange(range, from, to);
+  const startVal = start ?? null;
+  const endVal = end ?? null;
+
+  // Exclude admin accounts/activity so the numbers reflect real users only.
+  const adminEmails = ADMIN_EMAILS;
 
   try {
     const sql = getDb();
-    let userCount, totalCompletions, totalCoinsEarned;
-
-    if (!start) {
-      [userCount, totalCompletions, totalCoinsEarned] = await Promise.all([
-        sql`SELECT COUNT(*)::int as count FROM users`,
-        sql`SELECT COUNT(*)::int as count FROM quiz_completions`,
-        sql`SELECT COALESCE(SUM(coins_earned), 0)::int as total FROM quiz_completions`,
-      ]);
-    } else if (end) {
-      [userCount, totalCompletions, totalCoinsEarned] = await Promise.all([
-        sql`SELECT COUNT(*)::int as count FROM users WHERE created_at >= ${start} AND created_at < ${end}`,
-        sql`SELECT COUNT(*)::int as count FROM quiz_completions WHERE completed_at >= ${start} AND completed_at < ${end}`,
-        sql`SELECT COALESCE(SUM(coins_earned), 0)::int as total FROM quiz_completions WHERE completed_at >= ${start} AND completed_at < ${end}`,
-      ]);
-    } else {
-      [userCount, totalCompletions, totalCoinsEarned] = await Promise.all([
-        sql`SELECT COUNT(*)::int as count FROM users WHERE created_at >= ${start}`,
-        sql`SELECT COUNT(*)::int as count FROM quiz_completions WHERE completed_at >= ${start}`,
-        sql`SELECT COALESCE(SUM(coins_earned), 0)::int as total FROM quiz_completions WHERE completed_at >= ${start}`,
-      ]);
-    }
+    const [userCount, totalCompletions, totalCoinsEarned] = await Promise.all([
+      sql`
+        SELECT COUNT(*)::int as count FROM users
+        WHERE (${startVal}::timestamptz IS NULL OR created_at >= ${startVal})
+          AND (${endVal}::timestamptz IS NULL OR created_at < ${endVal})
+          AND email <> ALL(${adminEmails})
+      `,
+      sql`
+        SELECT COUNT(*)::int as count FROM quiz_completions
+        WHERE (${startVal}::timestamptz IS NULL OR completed_at >= ${startVal})
+          AND (${endVal}::timestamptz IS NULL OR completed_at < ${endVal})
+          AND user_id NOT IN (SELECT id FROM users WHERE email = ANY(${adminEmails}))
+      `,
+      sql`
+        SELECT COALESCE(SUM(coins_earned), 0)::int as total FROM quiz_completions
+        WHERE (${startVal}::timestamptz IS NULL OR completed_at >= ${startVal})
+          AND (${endVal}::timestamptz IS NULL OR completed_at < ${endVal})
+          AND user_id NOT IN (SELECT id FROM users WHERE email = ANY(${adminEmails}))
+      `,
+    ]);
 
     const users = userCount[0].count;
     const completions = totalCompletions[0].count;

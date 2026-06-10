@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAdminUser } from "@/lib/auth";
+import { getAdminUser, ADMIN_EMAILS } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { parseDateRange } from "@/lib/date-range";
 
@@ -14,47 +14,27 @@ export async function GET(req: Request) {
   const from = searchParams.get("from");
   const to = searchParams.get("to");
   const { start, end } = parseDateRange(range, from, to);
+  const startVal = start ?? null;
+  const endVal = end ?? null;
+
+  // Exclude admin accounts so the list reflects real users only.
+  const adminEmails = ADMIN_EMAILS;
 
   try {
     const sql = getDb();
-    let users;
-
-    if (!start) {
-      users = await sql`
-        SELECT u.id, u.email, u.username, u.coins, u.created_at, u.acquisition_source,
-          COALESCE(qc.quiz_count, 0)::int as quizzes_completed,
-          COALESCE(qc.total_coins, 0)::int as total_coins_earned,
-          COALESCE(gc.redemption_count, 0)::int as redemptions
-        FROM users u
-        LEFT JOIN (SELECT user_id, COUNT(*)::int as quiz_count, COALESCE(SUM(coins_earned), 0)::int as total_coins FROM quiz_completions GROUP BY user_id) qc ON qc.user_id = u.id
-        LEFT JOIN (SELECT redeemed_by, COUNT(*)::int as redemption_count FROM gift_cards WHERE redeemed_by IS NOT NULL GROUP BY redeemed_by) gc ON gc.redeemed_by = u.id
-        ORDER BY u.created_at DESC
-      `;
-    } else if (end) {
-      users = await sql`
-        SELECT u.id, u.email, u.username, u.coins, u.created_at, u.acquisition_source,
-          COALESCE(qc.quiz_count, 0)::int as quizzes_completed,
-          COALESCE(qc.total_coins, 0)::int as total_coins_earned,
-          COALESCE(gc.redemption_count, 0)::int as redemptions
-        FROM users u
-        LEFT JOIN (SELECT user_id, COUNT(*)::int as quiz_count, COALESCE(SUM(coins_earned), 0)::int as total_coins FROM quiz_completions GROUP BY user_id) qc ON qc.user_id = u.id
-        LEFT JOIN (SELECT redeemed_by, COUNT(*)::int as redemption_count FROM gift_cards WHERE redeemed_by IS NOT NULL GROUP BY redeemed_by) gc ON gc.redeemed_by = u.id
-        WHERE u.created_at >= ${start} AND u.created_at < ${end}
-        ORDER BY u.created_at DESC
-      `;
-    } else {
-      users = await sql`
-        SELECT u.id, u.email, u.username, u.coins, u.created_at, u.acquisition_source,
-          COALESCE(qc.quiz_count, 0)::int as quizzes_completed,
-          COALESCE(qc.total_coins, 0)::int as total_coins_earned,
-          COALESCE(gc.redemption_count, 0)::int as redemptions
-        FROM users u
-        LEFT JOIN (SELECT user_id, COUNT(*)::int as quiz_count, COALESCE(SUM(coins_earned), 0)::int as total_coins FROM quiz_completions GROUP BY user_id) qc ON qc.user_id = u.id
-        LEFT JOIN (SELECT redeemed_by, COUNT(*)::int as redemption_count FROM gift_cards WHERE redeemed_by IS NOT NULL GROUP BY redeemed_by) gc ON gc.redeemed_by = u.id
-        WHERE u.created_at >= ${start}
-        ORDER BY u.created_at DESC
-      `;
-    }
+    const users = await sql`
+      SELECT u.id, u.email, u.username, u.coins, u.created_at, u.acquisition_source,
+        COALESCE(qc.quiz_count, 0)::int as quizzes_completed,
+        COALESCE(qc.total_coins, 0)::int as total_coins_earned,
+        COALESCE(gc.redemption_count, 0)::int as redemptions
+      FROM users u
+      LEFT JOIN (SELECT user_id, COUNT(*)::int as quiz_count, COALESCE(SUM(coins_earned), 0)::int as total_coins FROM quiz_completions GROUP BY user_id) qc ON qc.user_id = u.id
+      LEFT JOIN (SELECT redeemed_by, COUNT(*)::int as redemption_count FROM gift_cards WHERE redeemed_by IS NOT NULL GROUP BY redeemed_by) gc ON gc.redeemed_by = u.id
+      WHERE (${startVal}::timestamptz IS NULL OR u.created_at >= ${startVal})
+        AND (${endVal}::timestamptz IS NULL OR u.created_at < ${endVal})
+        AND u.email <> ALL(${adminEmails})
+      ORDER BY u.created_at DESC
+    `;
 
     return NextResponse.json({ users });
   } catch (error) {
