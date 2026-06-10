@@ -22,19 +22,31 @@ export async function GET(req: Request) {
 
   try {
     const sql = getDb();
-    const [userCount, totalCompletions, totalCoinsEarned] = await Promise.all([
+    const [userCount, quizzesTaken, adsWatched, totalCoinsEarned] = await Promise.all([
+      // Registered users (guests aren't accounts)
       sql`
         SELECT COUNT(*)::int as count FROM users
         WHERE (${startVal}::timestamptz IS NULL OR created_at >= ${startVal})
           AND (${endVal}::timestamptz IS NULL OR created_at < ${endVal})
           AND email <> ALL(${adminEmails})
       `,
+      // Quizzes taken — event-based so it includes guests (NULL user_id), excludes admins
       sql`
-        SELECT COUNT(*)::int as count FROM quiz_completions
-        WHERE (${startVal}::timestamptz IS NULL OR completed_at >= ${startVal})
-          AND (${endVal}::timestamptz IS NULL OR completed_at < ${endVal})
-          AND user_id NOT IN (SELECT id FROM users WHERE email = ANY(${adminEmails}))
+        SELECT COUNT(*)::int as count FROM events
+        WHERE event_name = 'quiz_completed'
+          AND (${startVal}::timestamptz IS NULL OR created_at >= ${startVal})
+          AND (${endVal}::timestamptz IS NULL OR created_at < ${endVal})
+          AND (user_id IS NULL OR user_id NOT IN (SELECT id FROM users WHERE email = ANY(${adminEmails})))
       `,
+      // Rewarded ad views = unlock ad + claim ad, event-based (includes guests)
+      sql`
+        SELECT COUNT(*)::int as count FROM events
+        WHERE event_name IN ('quiz_unlocked', 'quiz_completed')
+          AND (${startVal}::timestamptz IS NULL OR created_at >= ${startVal})
+          AND (${endVal}::timestamptz IS NULL OR created_at < ${endVal})
+          AND (user_id IS NULL OR user_id NOT IN (SELECT id FROM users WHERE email = ANY(${adminEmails})))
+      `,
+      // Coins earned — persisted coins, registered users only (guest coins are ephemeral)
       sql`
         SELECT COALESCE(SUM(coins_earned), 0)::int as total FROM quiz_completions
         WHERE (${startVal}::timestamptz IS NULL OR completed_at >= ${startVal})
@@ -44,14 +56,15 @@ export async function GET(req: Request) {
     ]);
 
     const users = userCount[0].count;
-    const completions = totalCompletions[0].count;
+    const taken = quizzesTaken[0].count;
+    const ads = adsWatched[0].count;
     const coins = totalCoinsEarned[0].total;
-    const totalAds = completions * 2;
 
     return NextResponse.json({
       userCount: users,
-      totalAdsWatched: totalAds,
-      adsPerUser: users > 0 ? Math.round((totalAds / users) * 10) / 10 : 0,
+      quizzesTaken: taken,
+      totalAdsWatched: ads,
+      adsPerUser: users > 0 ? Math.round((ads / users) * 10) / 10 : 0,
       totalCoinsEarned: coins,
       coinsPerUser: users > 0 ? Math.round((coins / users) * 10) / 10 : 0,
     });

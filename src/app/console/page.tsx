@@ -6,6 +6,7 @@ import { useEffect, useState, useCallback, useMemo } from "react";
 
 interface Stats {
   userCount: number;
+  quizzesTaken: number;
   totalAdsWatched: number;
   adsPerUser: number;
   totalCoinsEarned: number;
@@ -341,10 +342,14 @@ export default function ConsolePage() {
 
       {/* Stats cards */}
       {stats && (
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
           <div className="pixel-card p-4 text-center">
             <div className="text-2xl font-bold text-pixel-cyan">{stats.userCount}</div>
             <div className="text-xs text-text-secondary mt-1">Users</div>
+          </div>
+          <div className="pixel-card p-4 text-center">
+            <div className="text-2xl font-bold text-pixel-blue">{stats.quizzesTaken}</div>
+            <div className="text-xs text-text-secondary mt-1">Quizzes Taken</div>
           </div>
           <div className="pixel-card p-4 text-center">
             <div className="text-2xl font-bold text-roblox-green">{stats.totalAdsWatched}</div>
