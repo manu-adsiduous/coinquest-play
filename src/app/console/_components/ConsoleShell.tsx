@@ -7,9 +7,9 @@ import { dateRanges } from "../_lib";
 const NAV = [
   { href: "/console", label: "Overview" },
   { href: "/console/users", label: "Users" },
-  { href: "/console/gift-cards", label: "Gift Cards" },
   { href: "/console/events", label: "Events" },
   { href: "/console/retention", label: "Retention" },
+  { href: "/console/gift-cards", label: "Gift Cards" },
 ];
 
 // Sections that fetch by date range (so we only show the picker there).
