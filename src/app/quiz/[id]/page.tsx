@@ -210,7 +210,7 @@ export default function QuizPage() {
   // LOCKED state
   if (state === "locked") {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-8 fade-in">
+      <div className="max-w-2xl mx-auto px-4 py-8">
         <div className="pixel-card p-8 text-center">
           <div className="text-6xl mb-4">{quiz.emoji}</div>
           <div className="flex items-center justify-center gap-2 mb-2">
@@ -287,7 +287,7 @@ export default function QuizPage() {
     const progress = ((currentQuestion + 1) / quiz.questions.length) * 100;
 
     return (
-      <div className="max-w-2xl mx-auto px-4 py-8 fade-in">
+      <div className="max-w-2xl mx-auto px-4 py-8">
         <div className="pixel-card p-8">
           <div className="mb-6">
             <div className="flex justify-between text-sm text-text-secondary mb-2">
@@ -343,7 +343,7 @@ export default function QuizPage() {
   // FINISHED state + CLAIM-PENDING state (same UI, different entry point)
   if (state === "finished" || state === "claim-pending") {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-8 fade-in">
+      <div className="max-w-2xl mx-auto px-4 py-8">
         <div className="pixel-card p-8 text-center">
           <div className="text-6xl mb-4">🏆</div>
           <h2 className="font-pixel text-sm text-white mb-2">
@@ -387,7 +387,7 @@ export default function QuizPage() {
   const canRetakeForMore = coinsStillAvailable > 0 && user;
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8 fade-in">
+    <div className="max-w-2xl mx-auto px-4 py-8">
       <div className="pixel-card p-8 text-center">
         <div className="text-6xl mb-4">
           {score === quiz.questions.length ? "🌟" : score >= quiz.questions.length / 2 ? "🎉" : "💪"}
