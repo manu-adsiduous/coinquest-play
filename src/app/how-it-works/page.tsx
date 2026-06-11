@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
+import { useInterstitialAd } from "@/components/useInterstitialAd";
 
 const steps = [
   {
@@ -52,6 +53,7 @@ const coinTiers = [
 
 export default function HowItWorksPage() {
   const { user } = useAuth();
+  const goHomeWithAd = useInterstitialAd();
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8 fade-in">
@@ -124,7 +126,7 @@ export default function HowItWorksPage() {
       {/* CTA */}
       <div className="text-center">
         {user ? (
-          <Link href="/" className="inline-block bg-roblox-green text-white font-bold py-3 px-8 rounded-sm pixel-btn text-lg">
+          <Link href="/" onClick={(e) => { e.preventDefault(); goHomeWithAd("/"); }} className="inline-block bg-roblox-green text-white font-bold py-3 px-8 rounded-sm pixel-btn text-lg">
             Browse Quizzes
           </Link>
         ) : (

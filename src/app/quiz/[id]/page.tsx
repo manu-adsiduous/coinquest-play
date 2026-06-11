@@ -185,7 +185,7 @@ export default function QuizPage() {
         <p className="text-4xl mb-4">😕</p>
         <p className="text-xl text-text-secondary">Quiz not found</p>
         <button
-          onClick={() => router.push("/")}
+          onClick={() => goHomeWithAd("/")}
           className="mt-4 pixel-btn bg-pixel-blue text-white px-6 py-2 rounded-sm"
         >
           Back to Quizzes
@@ -357,7 +357,7 @@ export default function QuizPage() {
           {/* Only offer "come back later" when no rewarded ad is available */}
           {noResultsAd && (
             <button
-              onClick={() => router.push("/")}
+              onClick={() => goHomeWithAd("/")}
               className="mt-4 text-text-secondary text-sm hover:text-pixel-cyan transition-colors"
             >
               Come back later to claim

@@ -4,6 +4,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
 import { trackEvent } from "@/lib/analytics";
+import { useInterstitialAd } from "@/components/useInterstitialAd";
 
 interface RedeemedCard {
   code: string;
@@ -14,6 +15,7 @@ interface RedeemedCard {
 export default function CashoutPage() {
   const { user, loading, refreshProfile } = useAuth();
   const router = useRouter();
+  const goHomeWithAd = useInterstitialAd();
   const [redeeming, setRedeeming] = useState(false);
   const [giftCardCode, setGiftCardCode] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -136,7 +138,7 @@ export default function CashoutPage() {
                   Keep playing quizzes!
                 </p>
                 <button
-                  onClick={() => router.push("/")}
+                  onClick={() => goHomeWithAd("/")}
                   className="bg-pixel-blue text-white font-bold py-3 px-8 rounded-sm pixel-btn"
                 >
                   Browse Quizzes

@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { playWrong } from "@/lib/sounds";
 import { useEffect } from "react";
+import { useInterstitialAd } from "@/components/useInterstitialAd";
 
 export default function NotFound() {
+  const goHomeWithAd = useInterstitialAd();
   useEffect(() => {
     playWrong();
   }, []);
@@ -32,6 +34,7 @@ export default function NotFound() {
         <div className="flex flex-col gap-3">
           <Link
             href="/"
+            onClick={(e) => { e.preventDefault(); goHomeWithAd("/"); }}
             className="w-full bg-roblox-green text-white font-bold py-3 px-6 rounded-sm pixel-btn text-center"
           >
             Play Quizzes

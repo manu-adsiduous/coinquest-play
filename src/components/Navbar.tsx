@@ -36,7 +36,7 @@ export default function Navbar() {
 
           {/* Desktop */}
           <div className="hidden md:flex items-center gap-5">
-            <Link href="/" className="hover:text-pixel-cyan transition-colors font-bold text-sm">
+            <Link href="/" onClick={(e) => { e.preventDefault(); goHomeWithAd("/"); }} className="hover:text-pixel-cyan transition-colors font-bold text-sm">
               Quizzes
             </Link>
             <Link href="/how-it-works" className="hover:text-pixel-cyan transition-colors font-bold text-sm">
@@ -181,7 +181,7 @@ export default function Navbar() {
         {/* Mobile menu */}
         {menuOpen && (
           <div className="md:hidden pb-4 flex flex-col gap-3 border-t-2 border-border-pixel pt-3">
-            <Link href="/" className="hover:text-pixel-cyan font-bold text-sm" onClick={() => setMenuOpen(false)}>
+            <Link href="/" className="hover:text-pixel-cyan font-bold text-sm" onClick={(e) => { e.preventDefault(); setMenuOpen(false); goHomeWithAd("/"); }}>
               Quizzes
             </Link>
             <Link href="/how-it-works" className="hover:text-pixel-cyan font-bold text-sm" onClick={() => setMenuOpen(false)}>
