@@ -48,7 +48,6 @@ export default function ConsoleShell({ children }: { children: React.ReactNode }
     <div className="max-w-6xl mx-auto px-4 py-8 flex flex-col md:flex-row gap-6">
       {/* Sidebar */}
       <aside className="md:w-44 flex-shrink-0">
-        <h1 className="font-pixel text-sm text-white mb-4">Console</h1>
         <nav className="flex md:flex-col gap-2 overflow-x-auto pb-1">
           {NAV.map((item) => {
             const active = pathname === item.href;

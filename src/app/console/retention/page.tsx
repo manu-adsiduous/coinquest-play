@@ -27,8 +27,6 @@ export default function RetentionPage() {
 
   return (
     <div>
-      <h2 className="font-pixel text-[10px] text-white mb-4">Retention</h2>
-
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Day-N Retention */}
         <div className="pixel-card p-5">

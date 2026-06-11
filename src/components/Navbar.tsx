@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "./AuthProvider";
 import { useInterstitialAd } from "./useInterstitialAd";
 import { useState } from "react";
@@ -9,7 +9,9 @@ import { useState } from "react";
 export default function Navbar() {
   const { user, signOut, loading, sessionCoins } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const goHomeWithAd = useInterstitialAd();
+  const inConsole = pathname?.startsWith("/console");
   const isAdmin = user?.isAdmin;
   const [menuOpen, setMenuOpen] = useState(false);
   const [showCoinPopup, setShowCoinPopup] = useState(false);
@@ -32,6 +34,9 @@ export default function Navbar() {
           >
             <span className="pixel-coin coin-bounce">C</span>
             <span className="font-pixel text-[9px] sm:text-[10px] text-coin-gold">CoinQuest</span>
+            {inConsole && (
+              <span className="font-pixel text-[9px] sm:text-[10px] text-white">Console</span>
+            )}
           </Link>
 
           {/* Desktop */}
