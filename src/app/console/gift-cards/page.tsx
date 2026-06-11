@@ -46,7 +46,7 @@ export default function GiftCardsPage() {
   };
 
   return (
-    <div className="pixel-card p-5 max-w-xl">
+    <div className="pixel-card p-5">
       <h2 className="font-pixel text-[10px] text-white mb-4">Gift Cards</h2>
 
       {/* Summary */}
