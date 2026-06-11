@@ -46,18 +46,20 @@ src/app/console/
 | **Retention** | day-N, cohorts, quiz depth | more funnels, segment-by-source |
 | **Economy** *(new in v2)* | — | coins/ledger view on the `coin_transactions` table |
 
-## Migration steps (incremental, low-risk — each ships independently)
+## Migration steps — v1 COMPLETE
 
-- [ ] **1. Shell:** add `console/layout.tsx` with sidebar nav + auth guard + URL-based
-      date-range picker. Keep the current monolithic page as Overview — nothing breaks.
-- [ ] **2. Extract shared bits:** move `Stats`/`UserRow`/`EventRow`/etc. interfaces and
-      small UI pieces (`StatCard`, `DateRangePicker`) into shared modules
-      (e.g. `src/app/console/_components/`, `src/app/console/_types.ts`).
-- [ ] **3. First section (proof of concept):** move **Gift Cards** (most self-contained)
-      into `console/gift-cards/page.tsx`; delete it from the old page.
-- [ ] **4. Move the rest one at a time:** Users → Events → Retention, deleting each from
-      the old page as it lands. The page shrinks until it's just the Overview.
-- [ ] **5. Cleanup:** Overview page holds only the stat cards.
+- [x] **1. Shell:** `console/layout.tsx` (server component) does the admin auth guard;
+      `console/_components/ConsoleShell.tsx` holds the sidebar nav + URL-based date-range
+      picker (writes `?range=&from=&to=`, persisted across sections via the nav links).
+- [x] **2. Shared bits:** interfaces in `console/_types.ts`; `useRangeQuery()` +
+      `dateRanges` in `console/_lib.ts`.
+- [x] **3 & 4. Sections split out:** `console/page.tsx` (Overview/stats),
+      `console/users/`, `console/gift-cards/`, `console/events/`, `console/retention/` —
+      each a client page that reads the date range from the URL and fetches its own data.
+- [x] **5. Overview** holds only the stat cards.
+
+Build verified: all five routes compile as dynamic (auth-gated). Date picker shows only
+on date-driven sections (Overview/Users/Events) via `DATE_ROUTES` in the shell.
 
 ## Deferred to v2 (after the structure is in place)
 
