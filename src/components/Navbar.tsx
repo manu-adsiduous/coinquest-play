@@ -3,11 +3,13 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "./AuthProvider";
+import { useInterstitialAd } from "./useInterstitialAd";
 import { useState } from "react";
 
 export default function Navbar() {
   const { user, signOut, loading, sessionCoins } = useAuth();
   const router = useRouter();
+  const goHomeWithAd = useInterstitialAd();
   const isAdmin = user?.isAdmin;
   const [menuOpen, setMenuOpen] = useState(false);
   const [showCoinPopup, setShowCoinPopup] = useState(false);
@@ -23,7 +25,11 @@ export default function Navbar() {
     <nav className="bg-[#0d1b2a] border-b-4 border-pixel-cyan text-text-primary sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <Link href="/" className="flex items-center gap-2 font-bold">
+          <Link
+            href="/"
+            onClick={(e) => { e.preventDefault(); goHomeWithAd("/"); }}
+            className="flex items-center gap-2 font-bold"
+          >
             <span className="pixel-coin coin-bounce">C</span>
             <span className="font-pixel text-[9px] sm:text-[10px] text-coin-gold">CoinQuest</span>
           </Link>

@@ -8,6 +8,7 @@ import { trackEvent } from "@/lib/analytics";
 import { scoreToCoins, MAX_COINS_PER_QUIZ } from "@/lib/coins";
 import RewardedAd from "@/components/RewardedAd";
 import AdBanner from "@/components/AdBanner";
+import { useInterstitialAd } from "@/components/useInterstitialAd";
 import CreativeGenerator from "@/components/CreativeGenerator";
 import { playCorrect, playWrong, playUnlock, playComplete, playCoins } from "@/lib/sounds";
 import { useMemo } from "react";
@@ -31,6 +32,7 @@ export default function QuizPage() {
   const params = useParams();
   const router = useRouter();
   const { user, refreshProfile, addSessionCoins } = useAuth();
+  const goHomeWithAd = useInterstitialAd();
   const isAdmin = user?.isAdmin;
 
   const quiz = allQuizzes.find((q) => q.id === params.id);
@@ -51,17 +53,7 @@ export default function QuizPage() {
   const [coinsEarnedThisAttempt, setCoinsEarnedThisAttempt] = useState(0);
   const [noResultsAd, setNoResultsAd] = useState(false);
 
-  // Preload ads on quiz pages — we know ads are needed here
-  useEffect(() => {
-    if (typeof window !== "undefined" && window.adConfig) {
-      window.adConfig({ preloadAdBreaks: "on" });
-    }
-    return () => {
-      if (typeof window !== "undefined" && window.adConfig) {
-        window.adConfig({ preloadAdBreaks: "off" });
-      }
-    };
-  }, []);
+  // Ad-break preloading is enabled globally in the root layout.
 
   const [pendingScore, setPendingScore] = useState(0);
 
@@ -527,7 +519,7 @@ export default function QuizPage() {
 
           <div className="flex gap-3">
             <button
-              onClick={() => router.push("/")}
+              onClick={() => goHomeWithAd("/")}
               className="flex-1 pixel-btn bg-pixel-blue text-white font-bold py-3 rounded-sm"
             >
               More Quizzes

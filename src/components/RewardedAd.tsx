@@ -10,7 +10,7 @@ declare global {
 }
 
 interface AdBreakConfig {
-  type: "reward";
+  type: "reward" | "start" | "pause" | "next" | "browse";
   name: string;
   beforeAd?: () => void;
   afterAd?: () => void;
