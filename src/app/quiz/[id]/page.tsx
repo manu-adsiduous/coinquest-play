@@ -53,7 +53,17 @@ export default function QuizPage() {
   const [coinsEarnedThisAttempt, setCoinsEarnedThisAttempt] = useState(0);
   const [noResultsAd, setNoResultsAd] = useState(false);
 
-  // Ad-break preloading is enabled globally in the root layout.
+  // Preload ad breaks on quiz pages (after mount, so it doesn't scrim first paint)
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.adConfig) {
+      window.adConfig({ preloadAdBreaks: "on" });
+    }
+    return () => {
+      if (typeof window !== "undefined" && window.adConfig) {
+        window.adConfig({ preloadAdBreaks: "off" });
+      }
+    };
+  }, []);
 
   const [pendingScore, setPendingScore] = useState(0);
 

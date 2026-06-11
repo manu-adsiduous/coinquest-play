@@ -1,52 +1,53 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 
 /**
- * Returns a navigate-with-interstitial function for going to the home/quiz list.
+ * Navigate to the home/quiz list, showing an H5 interstitial first when one is
+ * available (Google frequency-caps these, so it won't appear on every click).
  *
- * Shows an H5 interstitial ad (when one is available — Google frequency-caps
- * interstitials, so it won't appear on every click), then navigates to `href`.
- *
- * Navigation is guaranteed:
- * - No ad API (SSR) → navigate immediately.
- * - adBreakDone (ad closed / frequency-capped / no fill) → ALWAYS navigate. This
- *   is unconditional on purpose: even if the fallback timeout already fired
- *   during a slow-loading ad, we still land on the page once the ad is
- *   dismissed (a repeat push to the same route is a harmless no-op).
- * - Ad script blocked entirely (e.g. ad blocker) → no callback ever fires, so a
- *   timeout navigates. The `beforeAd` guard suppresses it while an ad is
- *   showing, so it can't pre-empt a visible ad.
+ * Navigation uses a hard `window.location` change rather than the SPA router:
+ * the ad SDK interferes with client-side router.push from inside its callbacks,
+ * which stranded users on the original page (they had to click twice). A hard
+ * navigation always lands. We trigger on afterAd/adBreakDone (whichever the SDK
+ * fires) with a timeout fallback for a fully blocked ad script; the beforeAd
+ * guard keeps the fallback from interrupting a visible ad.
  */
 export function useInterstitialAd() {
-  const router = useRouter();
+  return useCallback((href = "/") => {
+    if (typeof window === "undefined") return;
 
-  return useCallback(
-    (href = "/") => {
-      if (typeof window === "undefined" || !window.adBreak) {
-        router.push(href);
-        return;
-      }
+    let navigated = false;
+    const go = () => {
+      if (navigated) return;
+      navigated = true;
+      window.location.assign(href);
+    };
 
-      let adStarted = false;
+    if (!window.adBreak) {
+      go();
+      return;
+    }
 
-      const timeout = setTimeout(() => {
-        if (!adStarted) router.push(href);
-      }, 2000);
+    let adStarted = false;
+    const timeout = setTimeout(() => {
+      if (!adStarted) go();
+    }, 2000);
 
-      window.adBreak({
-        type: "next",
-        name: "home-nav",
-        beforeAd: () => {
-          adStarted = true;
-        },
-        adBreakDone: () => {
-          clearTimeout(timeout);
-          router.push(href);
-        },
-      });
-    },
-    [router],
-  );
+    window.adBreak({
+      type: "next",
+      name: "home-nav",
+      beforeAd: () => {
+        adStarted = true;
+      },
+      afterAd: () => {
+        clearTimeout(timeout);
+        go();
+      },
+      adBreakDone: () => {
+        clearTimeout(timeout);
+        go();
+      },
+    });
+  }, []);
 }
