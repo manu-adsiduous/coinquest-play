@@ -31,10 +31,14 @@ export function useInterstitialAd() {
       }
 
       let adStarted = false;
-      // No ad available / frequency-capped → navigate without waiting.
+      // Safety net only: when an ad is available it fires beforeAd/adBreakDone
+      // in well under a second (it's preloaded), and a frequency-capped/no-fill
+      // break fires adBreakDone immediately. This timeout just covers the case
+      // where the ad script is blocked entirely (e.g. an ad blocker) so those
+      // users still navigate promptly instead of waiting.
       const timeout = setTimeout(() => {
         if (!adStarted) navigate();
-      }, 3000);
+      }, 1200);
 
       window.adBreak({
         type: "next",
