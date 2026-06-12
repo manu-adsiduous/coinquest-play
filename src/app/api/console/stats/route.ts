@@ -22,7 +22,7 @@ export async function GET(req: Request) {
 
   try {
     const sql = getDb();
-    const [userCount, quizzesTaken, adsWatched, totalCoinsEarned] = await Promise.all([
+    const [userCount, quizzesTaken, adsWatched, totalCoinsEarned, cashoutCount] = await Promise.all([
       // Registered users (guests aren't accounts)
       sql`
         SELECT COUNT(*)::int as count FROM users
@@ -60,6 +60,14 @@ export async function GET(req: Request) {
           AND (${endVal}::timestamptz IS NULL OR completed_at < ${endVal})
           AND user_id NOT IN (SELECT id FROM users WHERE email = ANY(${adminEmails}))
       `,
+      // Cashouts — gift cards redeemed in range (admin-excluded)
+      sql`
+        SELECT COUNT(*)::int as count FROM gift_cards
+        WHERE redeemed_at IS NOT NULL
+          AND (${startVal}::timestamptz IS NULL OR redeemed_at >= ${startVal})
+          AND (${endVal}::timestamptz IS NULL OR redeemed_at < ${endVal})
+          AND redeemed_by NOT IN (SELECT id FROM users WHERE email = ANY(${adminEmails}))
+      `,
     ]);
 
     const users = userCount[0].count;
@@ -70,9 +78,11 @@ export async function GET(req: Request) {
     const adsReg = adsWatched[0].registered;
     const ads = adsGuest + adsReg;
     const coins = totalCoinsEarned[0].total;
+    const cashouts = cashoutCount[0].count;
 
     return NextResponse.json({
       userCount: users,
+      cashouts,
       quizzesTaken: taken,
       quizzesTakenGuest: takenGuest,
       quizzesTakenRegistered: takenReg,

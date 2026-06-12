@@ -1,5 +1,6 @@
 export interface Stats {
   userCount: number;
+  cashouts: number;
   quizzesTaken: number;
   quizzesTakenGuest: number;
   quizzesTakenRegistered: number;

@@ -60,6 +60,10 @@ export default function OverviewPage() {
         <div className="text-2xl font-bold text-coin-gold">{stats.coinsPerUser}</div>
         <div className="text-xs text-text-secondary mt-1">Coins / User</div>
       </div>
+      <div className="pixel-card p-4 text-center">
+        <div className="text-2xl font-bold text-roblox-green">{stats.cashouts}</div>
+        <div className="text-xs text-text-secondary mt-1">Cashouts</div>
+      </div>
     </div>
   );
 }
