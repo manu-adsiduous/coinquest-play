@@ -8,12 +8,13 @@ const NAV = [
   { href: "/console", label: "Overview" },
   { href: "/console/users", label: "Users" },
   { href: "/console/events", label: "Events" },
+  { href: "/console/ledger", label: "Ledger" },
   { href: "/console/retention", label: "Retention" },
   { href: "/console/gift-cards", label: "Gift Cards" },
 ];
 
 // Sections that fetch by date range (so we only show the picker there).
-const DATE_ROUTES = new Set(["/console", "/console/users", "/console/events"]);
+const DATE_ROUTES = new Set(["/console", "/console/users", "/console/events", "/console/ledger"]);
 
 export default function ConsoleShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();

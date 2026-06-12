@@ -64,3 +64,26 @@ export interface QuizDepth {
   quiz_count: number;
   user_count: number;
 }
+
+export interface LedgerTransaction {
+  id: number;
+  delta: number;
+  reason: string;
+  ref: string | null;
+  created_at: string;
+  username: string | null;
+  email: string | null;
+}
+
+export interface LedgerByReason {
+  reason: string;
+  count: number;
+  total: number;
+}
+
+export interface LedgerTotals {
+  count: number;
+  earned: number;
+  spent: number;
+  net: number;
+}
