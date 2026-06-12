@@ -20,6 +20,7 @@ export interface UserRow {
   quizzes_completed: number;
   total_coins_earned: number;
   redemptions: number;
+  events_count: number;
   acquisition_source: Record<string, string> | null;
 }
 

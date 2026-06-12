@@ -1,12 +1,22 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import type { UserRow } from "../_types";
 import { useRangeQuery } from "../_lib";
 
 export default function UsersPage() {
   const { qs } = useRangeQuery();
+  const sp = useSearchParams();
   const [users, setUsers] = useState<UserRow[]>([]);
+
+  // Link to the Events section pre-filtered to this user, preserving the date range.
+  const eventsHref = (u: UserRow) => {
+    const params = new URLSearchParams(sp.toString());
+    params.set("user", u.email);
+    return `/console/events?${params.toString()}`;
+  };
   const [userSort, setUserSort] = useState<{ key: string; dir: "asc" | "desc" }>({ key: "created_at", dir: "desc" });
   const [userSourceFilter, setUserSourceFilter] = useState("");
   const [showSourceFilter, setShowSourceFilter] = useState(false);
@@ -88,6 +98,7 @@ export default function UsersPage() {
                 { key: "created_at", label: "User" },
                 { key: "coins", label: "Coins" },
                 { key: "quizzes_completed", label: "Quizzes" },
+                { key: "events_count", label: "Events" },
                 { key: "redemptions", label: "Cashouts" },
               ].map((col) => (
                 <th
@@ -155,6 +166,19 @@ export default function UsersPage() {
                 </td>
                 <td className="py-2 pr-3 text-pixel-cyan">{u.quizzes_completed}</td>
                 <td className="py-2 pr-3">
+                  {u.events_count > 0 ? (
+                    <Link
+                      href={eventsHref(u)}
+                      className="text-pixel-magenta font-bold hover:underline"
+                      title="View this user's events"
+                    >
+                      {u.events_count}
+                    </Link>
+                  ) : (
+                    <span className="text-text-secondary">0</span>
+                  )}
+                </td>
+                <td className="py-2 pr-3">
                   {u.redemptions > 0 ? (
                     <span className="text-roblox-green font-bold">{u.redemptions}</span>
                   ) : (
@@ -187,7 +211,7 @@ export default function UsersPage() {
             ))}
             {users.length === 0 && (
               <tr>
-                <td colSpan={5} className="py-4 text-center text-text-secondary text-xs">
+                <td colSpan={6} className="py-4 text-center text-text-secondary text-xs">
                   No users yet
                 </td>
               </tr>

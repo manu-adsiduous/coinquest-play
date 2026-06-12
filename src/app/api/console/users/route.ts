@@ -26,10 +26,12 @@ export async function GET(req: Request) {
       SELECT u.id, u.email, u.username, u.coins, u.created_at, u.acquisition_source,
         COALESCE(qc.quiz_count, 0)::int as quizzes_completed,
         COALESCE(qc.total_coins, 0)::int as total_coins_earned,
-        COALESCE(gc.redemption_count, 0)::int as redemptions
+        COALESCE(gc.redemption_count, 0)::int as redemptions,
+        COALESCE(ec.event_count, 0)::int as events_count
       FROM users u
       LEFT JOIN (SELECT user_id, COUNT(*)::int as quiz_count, COALESCE(SUM(coins_earned), 0)::int as total_coins FROM quiz_completions GROUP BY user_id) qc ON qc.user_id = u.id
       LEFT JOIN (SELECT redeemed_by, COUNT(*)::int as redemption_count FROM gift_cards WHERE redeemed_by IS NOT NULL GROUP BY redeemed_by) gc ON gc.redeemed_by = u.id
+      LEFT JOIN (SELECT user_id, COUNT(*)::int as event_count FROM events WHERE user_id IS NOT NULL GROUP BY user_id) ec ON ec.user_id = u.id
       WHERE (${startVal}::timestamptz IS NULL OR u.created_at >= ${startVal})
         AND (${endVal}::timestamptz IS NULL OR u.created_at < ${endVal})
         AND u.email <> ALL(${adminEmails})

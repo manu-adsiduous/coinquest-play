@@ -1,16 +1,20 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import type { EventRow, EventSummary } from "../_types";
 import { useRangeQuery } from "../_lib";
 
 export default function EventsPage() {
   const { qs } = useRangeQuery();
+  const sp = useSearchParams();
   const [events, setEvents] = useState<EventRow[]>([]);
   const [eventSummary, setEventSummary] = useState<EventSummary[]>([]);
   const [eventsTotal, setEventsTotal] = useState(0);
   const [eventFilterName, setEventFilterName] = useState("");
-  const [eventFilterUser, setEventFilterUser] = useState("");
+  // Initialized from a ?user= link (e.g. clicking a user's event count); the
+  // server then filters the feed, total, and summary by this user.
+  const [eventFilterUser, setEventFilterUser] = useState(() => sp.get("user") || "");
   const [showEventFilter, setShowEventFilter] = useState(false);
   const [showUserFilter, setShowUserFilter] = useState(false);
 
