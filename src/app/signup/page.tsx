@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, useEffect, FormEvent } from "react";
 import { useAuth } from "@/components/AuthProvider";
+import { getAcquisitionData } from "@/components/AcquisitionTracker";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { trackEvent } from "@/lib/analytics";
@@ -14,6 +15,24 @@ export default function SignupPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [maybeReturning, setMaybeReturning] = useState(false);
+
+  // Gently nudge returning users: if an account already exists with this
+  // visitor's ad click ID, suggest logging in rather than making another one.
+  useEffect(() => {
+    const acq = getAcquisitionData();
+    if (!acq.gclid && !acq.fbclid && !acq.ttclid) return;
+    fetch("/api/auth/check-acquisition", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ acquisition: acq }),
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.existing) setMaybeReturning(true);
+      })
+      .catch(() => {});
+  }, []);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -47,6 +66,17 @@ export default function SignupPage() {
           <h1 className="font-pixel text-sm text-white">Join CoinQuest!</h1>
           <p className="text-text-secondary mt-1">Create an account to start earning Robux</p>
         </div>
+
+        {maybeReturning && (
+          <div className="bg-pixel-blue/10 border-2 border-pixel-blue px-4 py-3 rounded-sm mb-4">
+            <p className="text-pixel-blue font-bold text-sm mb-1">Already played here before?</p>
+            <p className="text-text-secondary text-xs">
+              Looks like you may already have a CoinQuest account from this link.{" "}
+              <Link href="/login" className="text-pixel-cyan font-bold hover:underline">Log in</Link>{" "}
+              to keep building up coins on it — your progress is saved! Or create a new account below.
+            </p>
+          </div>
+        )}
 
         {error && (
           <div className="bg-roblox-red/10 border-2 border-roblox-red text-roblox-red px-4 py-3 rounded-sm mb-4 text-sm">
