@@ -29,7 +29,7 @@ interface QuizCompletionInfo {
 }
 
 export default function Home() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const pathname = usePathname();
   const [activeCategory, setActiveCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
@@ -107,7 +107,7 @@ export default function Home() {
         <p className="text-text-secondary text-lg max-w-2xl mx-auto">
           Each quiz allows you to collect coins that you can cash out as Robux!
         </p>
-        {!user && (
+        {!loading && !user && (
           <div className="mt-6 flex justify-center gap-4">
             <a
               href="/signup"
