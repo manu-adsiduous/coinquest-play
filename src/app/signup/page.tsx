@@ -71,9 +71,9 @@ export default function SignupPage() {
           <div className="bg-pixel-blue/10 border-2 border-pixel-blue px-4 py-3 rounded-sm mb-4">
             <p className="text-pixel-blue font-bold text-sm mb-1">Already played here before?</p>
             <p className="text-text-secondary text-xs">
-              Looks like you may already have a CoinQuest account from this link.{" "}
+              Looks like you may already have a CoinQuest account.{" "}
               <Link href="/login" className="text-pixel-cyan font-bold hover:underline">Log in</Link>{" "}
-              to keep building up coins on it — your progress is saved! Or create a new account below.
+              to keep building up coins on it! Or create a new account below if you need a separate one.
             </p>
           </div>
         )}
