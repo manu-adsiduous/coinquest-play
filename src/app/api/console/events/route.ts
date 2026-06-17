@@ -20,8 +20,14 @@ export async function GET(req: Request) {
   const userQuery = searchParams.get("user")?.trim() || null;
   const userLike = userQuery ? `%${userQuery}%` : null;
 
-  // When filtering by user, return everything; otherwise cap the global feed.
-  const limit = userQuery
+  // Optional exact event-name filter, also server-side so filtering by a rare
+  // event (e.g. cashout) surfaces every match in range, not just whatever's in
+  // the recent feed. Only the feed is filtered by name — the summary/total stay
+  // unfiltered so the dropdown keeps showing every event type.
+  const eventName = searchParams.get("event")?.trim() || null;
+
+  // When filtering by user or event, return everything; else cap the global feed.
+  const limit = userQuery || eventName
     ? 5000
     : Math.min(Number(searchParams.get("limit")) || 500, 1000);
 
@@ -39,6 +45,7 @@ export async function GET(req: Request) {
         WHERE (${startVal}::timestamptz IS NULL OR e.created_at >= ${startVal})
           AND (${endVal}::timestamptz IS NULL OR e.created_at < ${endVal})
           AND (${userLike}::text IS NULL OR u.username ILIKE ${userLike} OR u.email ILIKE ${userLike})
+          AND (${eventName}::text IS NULL OR e.event_name = ${eventName})
         ORDER BY e.created_at DESC
         LIMIT ${limit}
       `,

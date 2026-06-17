@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import type { EventRow, EventSummary } from "../_types";
 import { useRangeQuery } from "../_lib";
@@ -20,10 +20,13 @@ export default function EventsPage() {
 
   const fetchEvents = useCallback(async () => {
     let url = `/api/console/events?${qs}`;
-    // Server-side user filter returns the user's full history (not just the
-    // global feed slice), so investigations see every event for that user.
+    // Both filters are server-side so a filtered view sees the COMPLETE matching
+    // set in range, not just whatever falls in the recent feed.
     if (eventFilterUser.trim()) {
       url += `&user=${encodeURIComponent(eventFilterUser.trim())}`;
+    }
+    if (eventFilterName) {
+      url += `&event=${encodeURIComponent(eventFilterName)}`;
     }
     const res = await fetch(url);
     if (res.ok) {
@@ -32,24 +35,13 @@ export default function EventsPage() {
       setEventSummary(data.summary);
       setEventsTotal(data.total);
     }
-  }, [qs, eventFilterUser]);
+  }, [qs, eventFilterUser, eventFilterName]);
 
   // Debounced so typing in the user filter doesn't fire a request per keystroke.
   useEffect(() => {
     const t = setTimeout(fetchEvents, 300);
     return () => clearTimeout(t);
   }, [fetchEvents]);
-
-  const filteredEvents = useMemo(() => {
-    return events.filter((e) => {
-      const matchesName = !eventFilterName || e.event_name === eventFilterName;
-      const matchesUser =
-        !eventFilterUser ||
-        (e.username && e.username.toLowerCase().includes(eventFilterUser.toLowerCase())) ||
-        (e.email && e.email.toLowerCase().includes(eventFilterUser.toLowerCase()));
-      return matchesName && matchesUser;
-    });
-  }, [events, eventFilterName, eventFilterUser]);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -162,7 +154,7 @@ export default function EventsPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredEvents.map((e) => (
+              {events.map((e) => (
                 <tr key={e.id} className="border-b border-border-pixel/50">
                   <td className="py-2 pr-3">
                     <span className="text-pixel-cyan font-bold text-xs">{e.event_name}</span>
@@ -184,7 +176,7 @@ export default function EventsPage() {
                   </td>
                 </tr>
               ))}
-              {filteredEvents.length === 0 && (
+              {events.length === 0 && (
                 <tr>
                   <td colSpan={4} className="py-4 text-center text-text-secondary text-xs">
                     No events yet
