@@ -38,6 +38,37 @@ export async function POST() {
       );
     }
 
+    // Block if another account sharing this visitor's ad click ID has already
+    // cashed out — stops one person cashing out across many accounts. A
+    // gclid/fbclid/ttclid is unique per ad click and persists in localStorage,
+    // so a shared value means the same browser/device.
+    const [me] = await sql`SELECT acquisition_source FROM users WHERE id = ${userId}`;
+    const acq = me?.acquisition_source && typeof me.acquisition_source === "object" ? me.acquisition_source : {};
+    const gclid = typeof acq.gclid === "string" ? acq.gclid : null;
+    const fbclid = typeof acq.fbclid === "string" ? acq.fbclid : null;
+    const ttclid = typeof acq.ttclid === "string" ? acq.ttclid : null;
+    if (gclid || fbclid || ttclid) {
+      const dup = await sql`
+        SELECT 1 FROM gift_cards gc
+        JOIN users other ON other.id = gc.redeemed_by
+        WHERE gc.redeemed_by IS NOT NULL
+          AND other.id <> ${userId}
+          AND (
+            (${gclid}::text IS NOT NULL AND other.acquisition_source->>'gclid' = ${gclid})
+            OR (${fbclid}::text IS NOT NULL AND other.acquisition_source->>'fbclid' = ${fbclid})
+            OR (${ttclid}::text IS NOT NULL AND other.acquisition_source->>'ttclid' = ${ttclid})
+          )
+        LIMIT 1
+      `;
+      if (dup.length > 0) {
+        console.warn(`Cashout blocked (shared click id): user ${userId}`);
+        return NextResponse.json(
+          { error: "This reward has already been claimed. Cashouts are limited to one account per player." },
+          { status: 403 },
+        );
+      }
+    }
+
     // Atomic: deduct coins only if user has >= 200
     const deductResult = await sql`
       UPDATE users SET coins = coins - 200
