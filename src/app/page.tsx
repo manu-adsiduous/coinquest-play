@@ -101,7 +101,8 @@ export default function Home() {
       {/* Hero */}
       <div className="text-center mb-10">
         <h1 className="font-pixel text-lg md:text-xl font-extrabold mb-4">
-          <span className="text-roblox-green">Complete quizzes.</span>{" "}
+          <span className="text-roblox-green">Complete quizzes.</span>
+          <br />
           <span className="text-coin-gold">Get FREE Robux.</span>
         </h1>
         <p className="text-text-secondary text-lg max-w-2xl mx-auto">
